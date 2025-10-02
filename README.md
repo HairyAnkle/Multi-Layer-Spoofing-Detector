@@ -2,7 +2,7 @@
 
 This project is a WPF application designed to detect and prevent spoofing attacks using AI-based multi-layer analysis. It provides packet capture and analysis capabilities.
 
-**[Here](HairyAnkle/Multi-Layer-Spoofing-Detector/tree/master)
+**[Here](https://github.com/HairyAnkle/Multi-Layer-Spoofing-Detector/tree/master)**
 
 ## Prerequisites
 
