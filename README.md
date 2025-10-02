@@ -26,15 +26,15 @@ Follow these steps to set up and run the project:
 
 1. **Clone the Repository**  
    Open a terminal and run the following command:
-   '''
+   ```
    git clone https://github.com/HairyAnkle/Multi-Layer-Spoofing-Detector.git
-   '''
+   ```
    
    Navigate to the project directory:
 
-   '''
+   ```
    cd Multi-Layer-Spoofing-Detector
-   '''
+   ```
    
 3. **Open the Project in Visual Studio**  
 - Launch Visual Studio 2022.
@@ -67,9 +67,9 @@ Follow these steps to set up and run the project:
 ## Troubleshooting
 
 - **NuGet Restore Issues**: If NuGet packages fail to restore, try running the following command in the terminal:
-  '''
+  ```
   dotnet restore
-  '''
+  ```
 - **Build Errors**: Ensure you have the correct version of the .NET SDK and Visual Studio installed.
 
 ## Contributing
