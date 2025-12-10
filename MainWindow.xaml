@@ -130,7 +130,7 @@
             <Border.Effect>
                 <DropShadowEffect Color="Black" Direction="270" ShadowDepth="4" BlurRadius="8" Opacity="0.3"/>
             </Border.Effect>
-            <Grid>
+            <Grid MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
@@ -154,7 +154,7 @@
 
                 <!-- Date/Time Display -->
                 <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,20,0">
-                    <TextBlock x:Name="DateTimeText" Text="2025-10-10 14:32:45" Style="{StaticResource RegularTextStyle}" 
+                    <TextBlock x:Name="DateTimeText" Text="2024-01-15 14:32:45" Style="{StaticResource RegularTextStyle}" 
                                HorizontalAlignment="Right" Margin="0"/>
                     <TextBlock Text="System Active" Style="{StaticResource SubTextStyle}" 
                                HorizontalAlignment="Right" Margin="0"/>
@@ -165,7 +165,7 @@
                     <!-- Minimize Button -->
                     <Button x:Name="MinimizeButton" Width="46" Height="32" 
                             Background="Transparent" BorderThickness="0"
-                            Cursor="Hand"
+                            Click="MinimizeButton_Click" Cursor="Hand"
                             ToolTip="Minimize">
                         <Button.Style>
                             <Style TargetType="Button">
@@ -197,7 +197,7 @@
                     <!-- Maximize/Restore Button -->
                     <Button x:Name="MaximizeButton" Width="46" Height="32" 
                             Background="Transparent" BorderThickness="0"
-                            Cursor="Hand"
+                            Click="MaximizeButton_Click" Cursor="Hand"
                             ToolTip="Maximize">
                         <Button.Style>
                             <Style TargetType="Button">
@@ -232,7 +232,7 @@
                     <!-- Close Button -->
                     <Button x:Name="CloseButton" Width="46" Height="32" 
                             Background="Transparent" BorderThickness="0"
-                            Click="Close_Button_Click"  Cursor="Hand"
+                            Click="CloseButton_Click" Cursor="Hand"
                             ToolTip="Close">
                         <Button.Style>
                             <Style TargetType="Button">
@@ -273,17 +273,17 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <!-- Top Row: Network Status and Packet Capture -->
+                <!-- Top Row: System Modules Overview -->
                 <Grid Grid.Row="0" Margin="8">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="1*"/>
                         <ColumnDefinition Width="1*"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- Network Status Panel -->
+                    <!-- System Status Panel -->
                     <Border Grid.Column="0" Style="{StaticResource CardStyle}" Margin="8,38,8,8">
                         <StackPanel>
-                            <TextBlock Text="Network Status" Style="{StaticResource HeaderTextStyle}"/>
+                            <TextBlock Text="System Status" Style="{StaticResource HeaderTextStyle}"/>
                             <Border x:Name="NetworkStatusIndicator" Background="{StaticResource SafeBrush}" CornerRadius="12" Padding="24" 
                                     HorizontalAlignment="Center" Margin="0,12">
                                 <StackPanel HorizontalAlignment="Center">
@@ -294,181 +294,179 @@
                                                Foreground="White" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                                 </StackPanel>
                             </Border>
-                            <TextBlock x:Name="LastScanText" Text="Last scan: 2 minutes ago" Style="{StaticResource SubTextStyle}" 
+                            <TextBlock x:Name="LastScanText" Text="Last scan: Ready" Style="{StaticResource SubTextStyle}" 
                                        HorizontalAlignment="Center"/>
                         </StackPanel>
                     </Border>
 
-                    <!-- Packet Capture Controls -->
+                    <!-- File Upload Module -->
                     <Border Grid.Column="1" Style="{StaticResource CardStyle}" Margin="8,38,8,8">
-                        <Grid>
-                            <!-- Main Content -->
-                            <StackPanel x:Name="MainContent">
-                                <TextBlock Text="Packet Capture &amp; Analysis Controls" Style="{StaticResource HeaderTextStyle}"/>
+                        <StackPanel>
+                            <TextBlock Text="📁 File Upload Module" Style="{StaticResource HeaderTextStyle}"/>
+                            <TextBlock Text="Upload saved PCAP files for processing and analysis" 
+                                       Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,12"/>
 
-                                <!-- Capture Control Buttons -->
-                                <Grid Margin="0,12">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Button x:Name="StartCaptureBtn" Grid.Column="0" Content="Start Capture" 
-                                            Style="{StaticResource AccentButtonStyle}"/>
-                                    <Button x:Name="StopCaptureBtn" Grid.Column="1" Content="Stop Capture" 
-                                            Style="{StaticResource SecondaryButtonStyle}" 
-                                            IsEnabled="False"/>
-                                </Grid>
+                            <!-- Upload Button -->
+                            <Button x:Name="UploadPcapBtn" Content="📤 Upload PCAP File" 
+                                    Style="{StaticResource AccentButtonStyle}" Click="UploadPcapBtn_Click"
+                                    HorizontalAlignment="Stretch" Margin="4,8"/>
 
-                                <!-- File Management Buttons -->
-                                <Grid Margin="0,8">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Button x:Name="UploadPcapBtn" Grid.Column="0" Content="📁 Upload PCAP" 
-                                            Style="{StaticResource SecondaryButtonStyle}"/>
-                                    <Button x:Name="AnalyzeBtn" Grid.Column="1" Content="🔍 Analyze" 
-                                            Style="{StaticResource AccentButtonStyle}"
-                                            IsEnabled="False"/>
-                                </Grid>
-
-                                <!-- Additional Actions -->
-                                <Button x:Name="OpenFolderBtn" Content="📂 Open Capture Folder" 
-                                        Style="{StaticResource SecondaryButtonStyle}"
-                                        HorizontalAlignment="Stretch" Margin="4,8,4,0"/>
-
-                                <!-- File Info Display -->
-                                <Border x:Name="FileInfoPanel" Background="#333344" CornerRadius="8" Padding="12" 
-                                        Margin="0,12" Visibility="Collapsed">
-                                    <StackPanel>
-                                        <TextBlock Text="Attached PCAP File:" Style="{StaticResource SubTextStyle}" 
-                                                   FontWeight="SemiBold"/>
-                                        <TextBlock x:Name="FileNameText" Text="sample_capture.pcap" 
-                                                   Style="{StaticResource RegularTextStyle}" Margin="0,4,0,0"/>
-                                        <Grid Margin="0,8,0,0">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <Ellipse x:Name="StatusIndicator" Grid.Column="0" Width="8" Height="8" 
-                                                     Fill="{StaticResource SafeBrush}" Margin="0,0,8,0"/>
-                                            <TextBlock x:Name="FileStatusText" Grid.Column="1" Text="Ready for analysis" 
-                                                       Style="{StaticResource SubTextStyle}" VerticalAlignment="Center"/>
-                                            <TextBlock x:Name="FileSizeText" Grid.Column="2" Text="2.3 MB" 
-                                                       Style="{StaticResource SubTextStyle}" VerticalAlignment="Center"/>
-                                        </Grid>
-                                    </StackPanel>
-                                </Border>
-
-                                <!-- Active Capture Info -->
-                                <Border x:Name="CaptureInfoPanel" Background="#333344" CornerRadius="8" Padding="12" 
-                                        Margin="0,12,0,0" Visibility="Collapsed">
-                                    <StackPanel>
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="*"/>
-                                            </Grid.ColumnDefinitions>
-                                            <Ellipse Grid.Column="0" Width="12" Height="12" Fill="{StaticResource CriticalBrush}" 
-                                                     Margin="0,0,8,0">
-                                                <Ellipse.Style>
-                                                    <Style TargetType="Ellipse">
-                                                        <Style.Triggers>
-                                                            <EventTrigger RoutedEvent="Loaded">
-                                                                <BeginStoryboard>
-                                                                    <Storyboard RepeatBehavior="Forever">
-                                                                        <DoubleAnimation Storyboard.TargetProperty="Opacity" 
-                                                                                         From="1" To="0.3" Duration="0:0:1" 
-                                                                                         AutoReverse="True"/>
-                                                                    </Storyboard>
-                                                                </BeginStoryboard>
-                                                            </EventTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Ellipse.Style>
-                                            </Ellipse>
-                                            <TextBlock Grid.Column="1" Text="Active Capture In Progress:" 
-                                                       Style="{StaticResource SubTextStyle}" FontWeight="SemiBold" 
-                                                       VerticalAlignment="Center"/>
-                                        </Grid>
-                                        <TextBlock x:Name="CaptureInterfaceText" Text="Interface: eth0" 
-                                                   Style="{StaticResource RegularTextStyle}" Margin="20,4,0,0"/>
-                                        <TextBlock x:Name="PacketCountText" Text="Packets captured: 1,247" 
-                                                   Style="{StaticResource RegularTextStyle}" Margin="20,0,0,0"/>
-                                        <TextBlock x:Name="CaptureDurationText" Text="Duration: 00:05:23" 
-                                                   Style="{StaticResource RegularTextStyle}" Margin="20,0,0,0"/>
-                                    </StackPanel>
-                                </Border>
-                            </StackPanel>
-
-                            <!-- Loading Overlay -->
-                            <Border x:Name="LoadingOverlay" Background="#CC1E1E2E" CornerRadius="12" 
-                                    Visibility="Collapsed" Panel.ZIndex="100">
-                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <!-- Animated Spinner -->
-                                    <Border Width="60" Height="60" Background="{StaticResource PrimaryAccentBrush}" 
-                                            CornerRadius="30" Margin="0,0,0,20">
-                                        <Border Width="50" Height="50" Background="Transparent" 
-                                                BorderBrush="White" BorderThickness="4" CornerRadius="25"
-                                                HorizontalAlignment="Center" VerticalAlignment="Center">
-                                            <Border.Style>
-                                                <Style TargetType="Border">
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding ElementName=LoadingOverlay, Path=Visibility}" 
-                                                                     Value="Visible">
-                                                            <DataTrigger.EnterActions>
-                                                                <BeginStoryboard>
-                                                                    <Storyboard RepeatBehavior="Forever">
-                                                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
-                                                                                         From="0" To="360" Duration="0:0:1"/>
-                                                                    </Storyboard>
-                                                                </BeginStoryboard>
-                                                            </DataTrigger.EnterActions>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Border.Style>
-                                            <Border.RenderTransform>
-                                                <RotateTransform/>
-                                            </Border.RenderTransform>
-                                            <Border.RenderTransformOrigin>
-                                                <Point X="0.5" Y="0.5"/>
-                                            </Border.RenderTransformOrigin>
-                                        </Border>
-                                    </Border>
-
-                                    <!-- Loading Text -->
-                                    <TextBlock Text="Analyzing packets using AI models..." 
-                                               Style="{StaticResource HeaderTextStyle}" 
-                                               FontSize="16" HorizontalAlignment="Center" Margin="0,0,0,8"/>
-                                    <TextBlock x:Name="LoadingProgressText" Text="Initializing analysis..." 
-                                               Style="{StaticResource SubTextStyle}" 
-                                               HorizontalAlignment="Center"/>
-
-                                    <!-- Progress Bar -->
-                                    <ProgressBar x:Name="AnalysisProgressBar" Width="200" Height="6" 
-                                                 Margin="0,12,0,0" Background="#333344" 
-                                                 Foreground="{StaticResource PrimaryAccentBrush}"
-                                                 BorderThickness="0" IsIndeterminate="True"/>
+                            <!-- File Info Display -->
+                            <Border x:Name="FileInfoPanel" Background="#333344" CornerRadius="8" Padding="12" 
+                                    Margin="0,12" Visibility="Collapsed">
+                                <StackPanel>
+                                    <TextBlock Text="📋 Uploaded File:" Style="{StaticResource SubTextStyle}" 
+                                               FontWeight="SemiBold"/>
+                                    <TextBlock x:Name="FileNameText" Text="sample_capture.pcap" 
+                                               Style="{StaticResource RegularTextStyle}" Margin="0,4,0,0"/>
+                                    <Grid Margin="0,8,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Ellipse x:Name="StatusIndicator" Grid.Column="0" Width="8" Height="8" 
+                                                 Fill="{StaticResource SafeBrush}" Margin="0,0,8,0"/>
+                                        <TextBlock x:Name="FileStatusText" Grid.Column="1" Text="Ready for analysis" 
+                                                   Style="{StaticResource SubTextStyle}" VerticalAlignment="Center"/>
+                                        <TextBlock x:Name="FileSizeText" Grid.Column="2" Text="2.3 MB" 
+                                                   Style="{StaticResource SubTextStyle}" VerticalAlignment="Center"/>
+                                    </Grid>
                                 </StackPanel>
                             </Border>
-                        </Grid>
+
+                            <!-- Module Status -->
+                            <Border Background="#2A3A4A" CornerRadius="8" Padding="12" Margin="0,12,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="Module Status:" Style="{StaticResource SubTextStyle}" FontWeight="SemiBold"/>
+                                    <TextBlock x:Name="UploadModuleStatus" Text="✓ Ready to accept PCAP files" 
+                                               Style="{StaticResource RegularTextStyle}" Foreground="{StaticResource SafeBrush}"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
                     </Border>
                 </Grid>
 
-                <!-- Bottom Row: Analysis Results, Reports, and Settings -->
+                <!-- Middle Row: Module Processing Pipeline -->
+                <Border Grid.Row="1" Style="{StaticResource CardStyle}" Margin="8">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Packet Analysis Module -->
+                        <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                            <TextBlock Text="🔬 Packet Analysis Module" Style="{StaticResource HeaderTextStyle}"/>
+                            <TextBlock Text="Parse packets and extract features using Python (Scapy, PyShark)" 
+                                       Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                            <Button x:Name="AnalyzeBtn" Content="▶️ Start Packet Analysis" 
+                                    Style="{StaticResource AccentButtonStyle}" Click="AnalyzeBtn_Click" 
+                                    IsEnabled="False" HorizontalAlignment="Stretch" Margin="0,0,0,12"/>
+
+                            <Border Background="#2A3A4A" CornerRadius="8" Padding="12">
+                                <StackPanel>
+                                    <TextBlock Text="Module Status:" Style="{StaticResource SubTextStyle}" FontWeight="SemiBold"/>
+                                    <TextBlock x:Name="AnalysisModuleStatus" Text="⏸ Waiting for PCAP file" 
+                                               Style="{StaticResource RegularTextStyle}" Foreground="{StaticResource WarningBrush}"/>
+                                    <TextBlock x:Name="AnalysisModuleDetails" Text="Upload a file to begin" 
+                                               Style="{StaticResource SubTextStyle}" Margin="0,4,0,0"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- Detection Module -->
+                        <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                            <TextBlock Text="🤖 Detection Module" Style="{StaticResource HeaderTextStyle}"/>
+                            <TextBlock Text="Execute trained AI model to detect IP, ARP, and DNS spoofing" 
+                                       Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                            <Border Background="#2A3A4A" CornerRadius="8" Padding="12">
+                                <StackPanel>
+                                    <TextBlock Text="Detection Layers:" Style="{StaticResource SubTextStyle}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                                        <Ellipse x:Name="ArpDetectionIndicator" Width="10" Height="10" Fill="#666" Margin="0,0,8,0"/>
+                                        <TextBlock Text="ARP Spoofing Detection" Style="{StaticResource SubTextStyle}"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                                        <Ellipse x:Name="DnsDetectionIndicator" Width="10" Height="10" Fill="#666" Margin="0,0,8,0"/>
+                                        <TextBlock Text="DNS Spoofing Detection" Style="{StaticResource SubTextStyle}"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                                        <Ellipse x:Name="IpDetectionIndicator" Width="10" Height="10" Fill="#666" Margin="0,0,8,0"/>
+                                        <TextBlock Text="IP Spoofing Detection" Style="{StaticResource SubTextStyle}"/>
+                                    </StackPanel>
+                                    <TextBlock x:Name="DetectionModuleStatus" Text="Status: Standby" 
+                                               Style="{StaticResource RegularTextStyle}" Margin="0,12,0,0" Foreground="{StaticResource SubTextBrush}"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- Loading Overlay for Analysis -->
+                        <Border x:Name="LoadingOverlay" Background="#CC1E1E2E" CornerRadius="12" 
+                                Grid.ColumnSpan="2" Visibility="Collapsed" Panel.ZIndex="100">
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <Border Width="60" Height="60" Background="{StaticResource PrimaryAccentBrush}" 
+                                        CornerRadius="30" Margin="0,0,0,20">
+                                    <Border Width="50" Height="50" Background="Transparent" 
+                                            BorderBrush="White" BorderThickness="4" CornerRadius="25"
+                                            HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding ElementName=LoadingOverlay, Path=Visibility}" 
+                                                                 Value="Visible">
+                                                        <DataTrigger.EnterActions>
+                                                            <BeginStoryboard>
+                                                                <Storyboard RepeatBehavior="Forever">
+                                                                    <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
+                                                                                     From="0" To="360" Duration="0:0:1"/>
+                                                                </Storyboard>
+                                                            </BeginStoryboard>
+                                                        </DataTrigger.EnterActions>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <Border.RenderTransform>
+                                            <RotateTransform/>
+                                        </Border.RenderTransform>
+                                        <Border.RenderTransformOrigin>
+                                            <Point X="0.5" Y="0.5"/>
+                                        </Border.RenderTransformOrigin>
+                                    </Border>
+                                </Border>
+
+                                <TextBlock Text="Processing..." 
+                                           Style="{StaticResource HeaderTextStyle}" 
+                                           FontSize="16" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                                <TextBlock x:Name="LoadingProgressText" Text="Initializing modules..." 
+                                           Style="{StaticResource SubTextStyle}" 
+                                           HorizontalAlignment="Center"/>
+
+                                <ProgressBar x:Name="AnalysisProgressBar" Width="200" Height="6" 
+                                             Margin="0,12,0,0" Background="#333344" 
+                                             Foreground="{StaticResource PrimaryAccentBrush}"
+                                             BorderThickness="0" IsIndeterminate="True"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!-- Bottom Row: Results Display and Report Generation -->
                 <Grid Grid.Row="2" Margin="8">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="2*"/>
                         <ColumnDefinition Width="1*"/>
-                        <ColumnDefinition Width="1*"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- Analysis Results -->
+                    <!-- Results Display Module -->
                     <Border Grid.Column="0" Style="{StaticResource CardStyle}">
                         <StackPanel>
-                            <TextBlock Text="Analysis Results" Style="{StaticResource HeaderTextStyle}"/>
+                            <TextBlock Text="📊 Results Display Module" Style="{StaticResource HeaderTextStyle}"/>
+                            <TextBlock Text="Detection outputs with threat indicators and logs" 
+                                       Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,8"/>
 
                             <TabControl Background="Transparent" BorderThickness="0">
                                 <TabControl.Resources>
@@ -500,26 +498,38 @@
                                     </Style>
                                 </TabControl.Resources>
 
-                                <TabItem Header="ARP Spoofing">
-                                    <ScrollViewer Height="300" VerticalScrollBarVisibility="Auto">
+                                <TabItem Header="🔴 ARP Spoofing">
+                                    <ScrollViewer Height="340" VerticalScrollBarVisibility="Auto">
                                         <StackPanel x:Name="ArpResultsPanel" Margin="8">
-                                            <!-- TODO: ARP results -->
+                                            <TextBlock Text="No analysis results yet. Upload a PCAP file and run analysis." 
+                                                       Style="{StaticResource SubTextStyle}" TextAlignment="Center" Margin="20"/>
                                         </StackPanel>
                                     </ScrollViewer>
                                 </TabItem>
 
-                                <TabItem Header="DNS Spoofing">
-                                    <ScrollViewer Height="300" VerticalScrollBarVisibility="Auto">
+                                <TabItem Header="🟡 DNS Spoofing">
+                                    <ScrollViewer Height="340" VerticalScrollBarVisibility="Auto">
                                         <StackPanel x:Name="DnsResultsPanel" Margin="8">
-                                            <!-- TODO: DNS results -->
+                                            <TextBlock Text="No analysis results yet. Upload a PCAP file and run analysis." 
+                                                       Style="{StaticResource SubTextStyle}" TextAlignment="Center" Margin="20"/>
                                         </StackPanel>
                                     </ScrollViewer>
                                 </TabItem>
 
-                                <TabItem Header="IP Spoofing">
-                                    <ScrollViewer Height="300" VerticalScrollBarVisibility="Auto">
+                                <TabItem Header="🟢 IP Spoofing">
+                                    <ScrollViewer Height="340" VerticalScrollBarVisibility="Auto">
                                         <StackPanel x:Name="IpResultsPanel" Margin="8">
-                                            <!-- TODO: IP results -->
+                                            <TextBlock Text="No analysis results yet. Upload a PCAP file and run analysis." 
+                                                       Style="{StaticResource SubTextStyle}" TextAlignment="Center" Margin="20"/>
+                                        </StackPanel>
+                                    </ScrollViewer>
+                                </TabItem>
+
+                                <TabItem Header="📋 Threat Logs">
+                                    <ScrollViewer Height="340" VerticalScrollBarVisibility="Auto">
+                                        <StackPanel x:Name="AlertsPanel" Margin="8">
+                                            <TextBlock Text="No threat alerts. System is secure." 
+                                                       Style="{StaticResource SubTextStyle}" TextAlignment="Center" Margin="20"/>
                                         </StackPanel>
                                     </ScrollViewer>
                                 </TabItem>
@@ -527,55 +537,56 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- Reports Section -->
+                    <!-- Report Generation Module -->
                     <Border Grid.Column="1" Style="{StaticResource CardStyle}">
                         <StackPanel>
-                            <TextBlock Text="Reports" Style="{StaticResource HeaderTextStyle}"/>
+                            <TextBlock Text="📄 Report Generation Module" Style="{StaticResource HeaderTextStyle}"/>
+                            <TextBlock Text="Documentation and preservation of detection results" 
+                                       Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,12"/>
 
-                            <ScrollViewer Height="300" VerticalScrollBarVisibility="Auto">
-                                <StackPanel x:Name="ReportsPanel">
-                                    <!-- TODO: Reports -->
+                            <!-- Analysis Summary -->
+                            <Border Background="#2A3A4A" CornerRadius="8" Padding="12" Margin="0,0,0,12">
+                                <StackPanel>
+                                    <TextBlock Text="Analysis Summary:" Style="{StaticResource SubTextStyle}" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition/>
+                                            <RowDefinition/>
+                                            <RowDefinition/>
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Total Threats:" Style="{StaticResource SubTextStyle}"/>
+                                        <TextBlock Grid.Row="0" Grid.Column="1" x:Name="TotalThreatsText" Text="0" Style="{StaticResource RegularTextStyle}" FontWeight="Bold"/>
+
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Critical Alerts:" Style="{StaticResource SubTextStyle}"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="1" x:Name="CriticalAlertsText" Text="0" Style="{StaticResource RegularTextStyle}" FontWeight="Bold" Foreground="{StaticResource CriticalBrush}"/>
+
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Packets Analyzed:" Style="{StaticResource SubTextStyle}"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="1" x:Name="PacketsAnalyzedText" Text="0" Style="{StaticResource RegularTextStyle}" FontWeight="Bold"/>
+                                    </Grid>
                                 </StackPanel>
-                            </ScrollViewer>
+                            </Border>
 
-                            <StackPanel Margin="0,12,0,0">
-                                <Button Content="Export CSV" Style="{StaticResource AccentButtonStyle}" 
-                                        HorizontalAlignment="Stretch"/>
-                                <Button Content="Export JSON" Style="{StaticResource SecondaryButtonStyle}" 
-                                        HorizontalAlignment="Stretch"/>
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
+                            <!-- Report Format Selection -->
+                            <TextBlock Text="Select Report Format:" Style="{StaticResource RegularTextStyle}" Margin="0,0,0,8" FontWeight="SemiBold"/>
 
-                    <!-- Settings Quick Access -->
-                    <Border Grid.Column="2" Style="{StaticResource CardStyle}">
-                        <StackPanel>
-                            <TextBlock Text="Settings" Style="{StaticResource HeaderTextStyle}"/>
+                            <Button Content="📄 Generate HTML Report" Style="{StaticResource AccentButtonStyle}" 
+                                    HorizontalAlignment="Stretch" Click="ExportCsvBtn_Click" Margin="0,4"/>
+                            <Button Content="📋 Generate JSON Report" Style="{StaticResource SecondaryButtonStyle}" 
+                                    HorizontalAlignment="Stretch" Click="ExportJsonBtn_Click" Margin="0,4"/>
 
-                            <StackPanel Margin="0,12">
-                                <TextBlock Text="Threshold Adjustment" Style="{StaticResource RegularTextStyle}" 
-                                           Margin="0,0,0,8"/>
-                                <Slider Minimum="0" Maximum="100" Value="75" 
-                                        Foreground="{StaticResource PrimaryAccentBrush}" Margin="0,0,0,16"/>
-
-                                <TextBlock Text="Notifications" Style="{StaticResource RegularTextStyle}" 
-                                           Margin="0,0,0,8"/>
-                                <CheckBox Content="Email Alerts" Foreground="{StaticResource TextBrush}" 
-                                          IsChecked="True" Margin="0,2"/>
-                                <CheckBox Content="Desktop Notifications" Foreground="{StaticResource TextBrush}" 
-                                          IsChecked="True" Margin="0,2"/>
-                                <CheckBox Content="Sound Alerts" Foreground="{StaticResource TextBrush}" 
-                                          IsChecked="False" Margin="0,2,0,16"/>
-
-                                <TextBlock Text="Report Preferences" Style="{StaticResource RegularTextStyle}" 
-                                           Margin="0,0,0,8"/>
-                                <CheckBox Content="Auto-generate hourly" Foreground="{StaticResource TextBrush}" 
-                                          IsChecked="True" Margin="0,2"/>
-                                <CheckBox Content="Include packet details" Foreground="{StaticResource TextBrush}" 
-                                          IsChecked="False" Margin="0,2"/>
-                                <CheckBox Content="Send to admin" Foreground="{StaticResource TextBrush}" 
-                                          IsChecked="True" Margin="0,2"/>
-                            </StackPanel>
+                            <!-- Module Status -->
+                            <Border Background="#2A3A4A" CornerRadius="8" Padding="12" Margin="0,12,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="Module Status:" Style="{StaticResource SubTextStyle}" FontWeight="SemiBold"/>
+                                    <TextBlock x:Name="ReportModuleStatus" Text="✓ Ready to generate reports" 
+                                               Style="{StaticResource RegularTextStyle}" Foreground="{StaticResource SafeBrush}"/>
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
                     </Border>
                 </Grid>
