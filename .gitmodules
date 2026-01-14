@@ -1,0 +1,3 @@
+[submodule "integration/tools/CICFlowMeter"]
+	path = integration/tools/CICFlowMeter
+	url = https://github.com/GintsEngelen/CICFlowMeter
