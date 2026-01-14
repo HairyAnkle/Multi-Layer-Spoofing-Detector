@@ -142,6 +142,18 @@ reports/json/
 
 ---
 
+## Trained ML Model
+
+Due to GitHub file size limits, the trained ML model is not stored in this repository.
+
+Download:
+- RFandXGBoost.pkl (≈1.2 GB)
+- Place it in: integration/models/
+
+The application will not run inference without this file.
+
+---
+
 ## 🔐 Chain of Custody
 - PCAP hashed with SHA-256
 - Reports hashed after generation
@@ -166,6 +178,10 @@ Stored per case:
 Designed for Digital Forensics and Cybersecurity research.
 
 ## 👨‍💻 Author
+
 **Cristian Ogena**
+
 Computer Science – Digital Forensics
+
 Multi-Layer Spoofing Detection System
+
