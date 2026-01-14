@@ -179,7 +179,7 @@ Designed for Digital Forensics and Cybersecurity research.
 
 ## 👨‍💻 Author
 
-**Cristian Ogena**
+**HairyAnkle**
 
 Computer Science – Digital Forensics
 
