@@ -9,4 +9,54 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Content Include="integration\tools\CICFlowMeter\.idea\compiler.xml" />
+    <Content Include="integration\tools\CICFlowMeter\.idea\inspectionProfiles\profiles_settings.xml" />
+    <Content Include="integration\tools\CICFlowMeter\.idea\inspectionProfiles\Project_Default.xml" />
+    <Content Include="integration\tools\CICFlowMeter\.idea\jarRepositories.xml" />
+    <Content Include="integration\tools\CICFlowMeter\.idea\libraries-with-intellij-classes.xml" />
+    <Content Include="integration\tools\CICFlowMeter\.idea\misc.xml" />
+    <Content Include="integration\tools\CICFlowMeter\.idea\vcs.xml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="integration\tools\CICFlowMeter\.git\config" />
+    <None Include="integration\tools\CICFlowMeter\.git\description" />
+    <None Include="integration\tools\CICFlowMeter\.git\HEAD" />
+    <None Include="integration\tools\CICFlowMeter\.git\hooks\applypatch-msg.sample" />
+    <None Include="integration\tools\CICFlowMeter\.git\hooks\commit-msg.sample" />
+    <None Include="integration\tools\CICFlowMeter\.git\hooks\fsmonitor-watchman.sample" />
+    <None Include="integration\tools\CICFlowMeter\.git\hooks\post-update.sample" />
+    <None Include="integration\tools\CICFlowMeter\.git\hooks\pre-applypatch.sample" />
+    <None Include="integration\tools\CICFlowMeter\.git\hooks\pre-commit.sample" />
+    <None Include="integration\tools\CICFlowMeter\.git\hooks\pre-merge-commit.sample" />
+    <None Include="integration\tools\CICFlowMeter\.git\hooks\pre-push.sample" />
+    <None Include="integration\tools\CICFlowMeter\.git\hooks\pre-rebase.sample" />
+    <None Include="integration\tools\CICFlowMeter\.git\hooks\pre-receive.sample" />
+    <None Include="integration\tools\CICFlowMeter\.git\hooks\prepare-commit-msg.sample" />
+    <None Include="integration\tools\CICFlowMeter\.git\hooks\push-to-checkout.sample" />
+    <None Include="integration\tools\CICFlowMeter\.git\hooks\sendemail-validate.sample" />
+    <None Include="integration\tools\CICFlowMeter\.git\hooks\update.sample" />
+    <None Include="integration\tools\CICFlowMeter\.git\index" />
+    <None Include="integration\tools\CICFlowMeter\.git\info\exclude" />
+    <None Include="integration\tools\CICFlowMeter\.git\logs\HEAD" />
+    <None Include="integration\tools\CICFlowMeter\.git\logs\refs\heads\master" />
+    <None Include="integration\tools\CICFlowMeter\.git\logs\refs\remotes\origin\HEAD" />
+    <None Include="integration\tools\CICFlowMeter\.git\objects\pack\pack-cefc7ef00e7948c4b2ec54b311c92354ad312f0a.idx" />
+    <None Include="integration\tools\CICFlowMeter\.git\objects\pack\pack-cefc7ef00e7948c4b2ec54b311c92354ad312f0a.pack" />
+    <None Include="integration\tools\CICFlowMeter\.git\objects\pack\pack-cefc7ef00e7948c4b2ec54b311c92354ad312f0a.rev" />
+    <None Include="integration\tools\CICFlowMeter\.git\packed-refs" />
+    <None Include="integration\tools\CICFlowMeter\.git\refs\heads\master" />
+    <None Include="integration\tools\CICFlowMeter\.git\refs\remotes\origin\HEAD" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="integration\tools\CICFlowMeter\.git\objects\info\" />
+    <Folder Include="integration\tools\CICFlowMeter\.git\refs\tags\" />
+  </ItemGroup>
+
 </Project>
