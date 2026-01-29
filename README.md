@@ -4,6 +4,8 @@ This project is a WPF application designed to detect and prevent spoofing attack
 
 ## [Here](https://github.com/HairyAnkle/Multi-Layer-Spoofing-Detector/tree/master)
 
+## [INSTALLER](https://drive.google.com/drive/folders/1faWgoDnEAQzrcwdAbxfdRPabWV3slHvr?usp=sharing)
+
 ## Prerequisites
 
 Before setting up the project, ensure you have the following installed:
