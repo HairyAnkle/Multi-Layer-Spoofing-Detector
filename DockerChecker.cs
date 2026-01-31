@@ -52,7 +52,6 @@ namespace Multi_Layer_Spoofing_Detector
             }
         }
 
-
         public static bool IsCICFlowMeterImageAvailable(out string error)
         {
             return RunCommand("docker", "image inspect cicflowmeter", out error);

@@ -59,4 +59,46 @@
     <Folder Include="integration\tools\CICFlowMeter\.git\refs\tags\" />
   </ItemGroup>
 
+	<ItemGroup>
+		<!-- Copy DB scripts / schema -->
+		<None Include="data\**\*">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</None>
+
+		<!-- Copy integration backend + docker files -->
+		<None Include="integration\backend\**\*">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</None>
+
+		<None Include="integration\docker\**\*">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</None>
+
+		<!-- Copy CICFlowMeter tool folder if you need it at runtime -->
+		<None Include="integration\tools\**\*">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</None>
+
+		<!-- Copy README + build scripts -->
+		<None Include="README.md">
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</None>
+		<None Include="build-all.ps1">
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</None>
+		<None Include="build-add.sh">
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</None>
+
+		<None Include="integration\models\RFandXGBoost.pkl">
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</None>
+
+	</ItemGroup>
+
+
 </Project>
