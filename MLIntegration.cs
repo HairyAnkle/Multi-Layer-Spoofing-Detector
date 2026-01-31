@@ -138,7 +138,20 @@ namespace Multi_Layer_Spoofing_Detector
                 process.Start();
                 process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
-                process.WaitForExit(ANALYSIS_TIMEOUT_MS);
+                if (!process.WaitForExit(ANALYSIS_TIMEOUT_MS))
+                {
+                    try
+                    {
+                        process.Kill(true);
+                    }
+                    catch (InvalidOperationException)
+                    {
+                    }
+
+                    throw new TimeoutException(
+                        $"ML container exceeded timeout of {ANALYSIS_TIMEOUT_MS / 1000} seconds."
+                    );
+                }
 
                 if (process.ExitCode != 0)
                 {

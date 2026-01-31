@@ -40,7 +40,8 @@ namespace Multi_Layer_Spoofing_Detector
         private DateTime _lastAnalysisTime;
 
 
-        private MLIntegration _mlIntegration;
+        private MLIntegration? _mlIntegration;
+        private bool _isMlIntegrationReady;
 
         public MainWindow()
         {
@@ -78,7 +79,17 @@ namespace Multi_Layer_Spoofing_Detector
                     );
                 }
 
+                if (!DockerChecker.IsCICFlowMeterImageAvailable(out dockerError))
+                {
+                    throw new Exception(
+                        "CICFlowMeter Docker image not found.\n\n" +
+                        "Please build or pull the CICFlowMeter image:\n\n" +
+                        "docker build -t cicflowmeter ."
+                    );
+                }
+
                 _mlIntegration = new MLIntegration();
+                _isMlIntegrationReady = true;
 
                 AnalysisModuleDetails.Text = "✓ Docker ML Engine ready";
                 AnalysisModuleDetails.Foreground =
@@ -86,9 +97,12 @@ namespace Multi_Layer_Spoofing_Detector
             }
             catch (Exception ex)
             {
+                _isMlIntegrationReady = false;
                 AnalysisModuleDetails.Text = "✗ Environment check failed";
                 AnalysisModuleDetails.Foreground =
                     (SolidColorBrush)FindResource("CriticalBrush");
+
+                AnalyzeBtn.IsEnabled = false;
 
                 MessageBox.Show(
                     ex.Message,
@@ -267,6 +281,13 @@ namespace Multi_Layer_Spoofing_Detector
                     LoadingProgressText.Text = message;
                 });
 
+                if (!_isMlIntegrationReady || _mlIntegration == null)
+                {
+                    throw new InvalidOperationException(
+                        "ML integration is not ready. Please verify Docker and required images."
+                    );
+                }
+
                 var mlResult = await _mlIntegration.AnalyzePcapAsync(_currentPcapFilePath, progress);
 
                 if (mlResult == null)
@@ -304,18 +325,18 @@ namespace Multi_Layer_Spoofing_Detector
                 else
                     _currentNetworkStatus = "SECURE";
 
-                _repo.InsertCase(
+                string pcapHash = ComputeSHA256FromFile(_currentPcapFilePath);
+
+                _repo.InsertAnalysisCase(
                     _currentCaseId,
                     System.IO.Path.GetFileName(_currentPcapFilePath),
-                    ComputeSHA256(_currentPcapFilePath),
+                    pcapHash,
                     _currentNetworkStatus,
-                    _reports[0].PacketsAnalyzed
+                    _reports[0].PacketsAnalyzed,
+                    _threatAlerts,
+                    _analysisResults,
+                    pcapHash
                 );
-
-                _repo.InsertThreatAlerts(_currentCaseId, _threatAlerts);
-                _repo.InsertAnalysisResults(_currentCaseId, _analysisResults);
-
-                _repo.InsertHash(_currentCaseId, "PCAP", ComputeSHA256(_currentPcapFilePath));
 
 
                 LoadingProgressText.Text = "Results Display - Preparing outputs...";
@@ -1003,6 +1024,14 @@ body {{ font-family: Segoe UI; background:#f5f5f5; padding:20px; }}
             using var sha256 = SHA256.Create();
             byte[] bytes = Encoding.UTF8.GetBytes(content);
             byte[] hash = sha256.ComputeHash(bytes);
+            return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+        }
+
+        private static string ComputeSHA256FromFile(string filePath)
+        {
+            using var sha256 = SHA256.Create();
+            using var stream = File.OpenRead(filePath);
+            byte[] hash = sha256.ComputeHash(stream);
             return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
         }
 

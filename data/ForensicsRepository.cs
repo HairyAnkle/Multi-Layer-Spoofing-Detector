@@ -85,11 +85,10 @@ namespace Multi_Layer_Spoofing_Detector.data
             string pcapFile,
             string pcapHash,
             string networkStatus,
-            int packetsAnalyzed)
+            int packetsAnalyzed,
+            SQLiteConnection conn,
+            SQLiteTransaction transaction)
         {
-            using var conn = new SQLiteConnection(_connectionString);
-            conn.Open();
-
             using var cmd = new SQLiteCommand(@"
                 INSERT INTO Cases (
                     CaseId, PcapFile, PcapHash,
@@ -99,7 +98,7 @@ namespace Multi_Layer_Spoofing_Detector.data
                     @caseId, @pcapFile, @pcapHash,
                     @networkStatus, @packets, @time
                 );
-            ", conn);
+            ", conn, transaction);
 
             cmd.Parameters.AddWithValue("@caseId", caseId);
             cmd.Parameters.AddWithValue("@pcapFile", pcapFile);
@@ -109,6 +108,29 @@ namespace Multi_Layer_Spoofing_Detector.data
             cmd.Parameters.AddWithValue("@time", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
             cmd.ExecuteNonQuery();
+        }
+
+        public void InsertAnalysisCase(
+            string caseId,
+            string pcapFile,
+            string pcapHash,
+            string networkStatus,
+            int packetsAnalyzed,
+            List<ThreatAlert> alerts,
+            List<AnalysisResult> results,
+            string evidenceHash)
+        {
+            using var conn = new SQLiteConnection(_connectionString);
+            conn.Open();
+
+            using var transaction = conn.BeginTransaction();
+
+            InsertCase(caseId, pcapFile, pcapHash, networkStatus, packetsAnalyzed, conn, transaction);
+            InsertThreatAlerts(caseId, alerts, conn, transaction);
+            InsertAnalysisResults(caseId, results, conn, transaction);
+            InsertHash(caseId, "PCAP", evidenceHash, conn, transaction);
+
+            transaction.Commit();
         }
 
         public ForensicCase GetCaseMetadata(string caseId)
@@ -148,6 +170,17 @@ namespace Multi_Layer_Spoofing_Detector.data
             using var conn = new SQLiteConnection(_connectionString);
             conn.Open();
 
+            using var transaction = conn.BeginTransaction();
+            InsertThreatAlerts(caseId, alerts, conn, transaction);
+            transaction.Commit();
+        }
+
+        private void InsertThreatAlerts(
+            string caseId,
+            List<ThreatAlert> alerts,
+            SQLiteConnection conn,
+            SQLiteTransaction transaction)
+        {
             foreach (var alert in alerts)
             {
                 using var cmd = new SQLiteCommand(@"
@@ -155,7 +188,7 @@ namespace Multi_Layer_Spoofing_Detector.data
                     (CaseId, Timestamp, Severity, Type, IpAddress, Description, AdditionalInfo)
                     VALUES
                     (@caseId, @time, @severity, @type, @ip, @desc, @info);
-                ", conn);
+                ", conn, transaction);
 
                 cmd.Parameters.AddWithValue("@caseId", caseId);
                 cmd.Parameters.AddWithValue("@time", alert.Timestamp.ToString("yyyy-MM-dd HH:mm:ss"));
@@ -175,6 +208,17 @@ namespace Multi_Layer_Spoofing_Detector.data
             using var conn = new SQLiteConnection(_connectionString);
             conn.Open();
 
+            using var transaction = conn.BeginTransaction();
+            InsertAnalysisResults(caseId, results, conn, transaction);
+            transaction.Commit();
+        }
+
+        private void InsertAnalysisResults(
+            string caseId,
+            List<AnalysisResult> results,
+            SQLiteConnection conn,
+            SQLiteTransaction transaction)
+        {
             foreach (var r in results)
             {
                 using var cmd = new SQLiteCommand(@"
@@ -182,7 +226,7 @@ namespace Multi_Layer_Spoofing_Detector.data
                     (CaseId, Category, RiskLevel, Description, Details, Confidence)
                     VALUES
                     (@caseId, @cat, @risk, @desc, @details, @conf);
-                ", conn);
+                ", conn, transaction);
 
                 cmd.Parameters.AddWithValue("@caseId", caseId);
                 cmd.Parameters.AddWithValue("@cat", r.Category);
@@ -201,12 +245,24 @@ namespace Multi_Layer_Spoofing_Detector.data
             using var conn = new SQLiteConnection(_connectionString);
             conn.Open();
 
+            using var transaction = conn.BeginTransaction();
+            InsertHash(caseId, evidenceType, hashValue, conn, transaction);
+            transaction.Commit();
+        }
+
+        private void InsertHash(
+            string caseId,
+            string evidenceType,
+            string hashValue,
+            SQLiteConnection conn,
+            SQLiteTransaction transaction)
+        {
             using var cmd = new SQLiteCommand(@"
                 INSERT INTO Hashes
                 (CaseId, EvidenceType, HashValue, Algorithm, Timestamp)
                 VALUES
                 (@caseId, @type, @hash, 'SHA-256', @time);
-            ", conn);
+            ", conn, transaction);
 
             cmd.Parameters.AddWithValue("@caseId", caseId);
             cmd.Parameters.AddWithValue("@type", evidenceType);
