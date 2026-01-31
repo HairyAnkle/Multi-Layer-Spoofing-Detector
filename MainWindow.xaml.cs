@@ -40,7 +40,8 @@ namespace Multi_Layer_Spoofing_Detector
         private DateTime _lastAnalysisTime;
 
 
-        private MLIntegration _mlIntegration;
+        private MLIntegration? _mlIntegration;
+        private bool _isMlIntegrationReady;
 
         public MainWindow()
         {
@@ -78,7 +79,17 @@ namespace Multi_Layer_Spoofing_Detector
                     );
                 }
 
+                if (!DockerChecker.IsCICFlowMeterImageAvailable(out dockerError))
+                {
+                    throw new Exception(
+                        "CICFlowMeter Docker image not found.\n\n" +
+                        "Please build or pull the CICFlowMeter image:\n\n" +
+                        "docker build -t cicflowmeter ."
+                    );
+                }
+
                 _mlIntegration = new MLIntegration();
+                _isMlIntegrationReady = true;
 
                 AnalysisModuleDetails.Text = "✓ Docker ML Engine ready";
                 AnalysisModuleDetails.Foreground =
@@ -86,9 +97,12 @@ namespace Multi_Layer_Spoofing_Detector
             }
             catch (Exception ex)
             {
+                _isMlIntegrationReady = false;
                 AnalysisModuleDetails.Text = "✗ Environment check failed";
                 AnalysisModuleDetails.Foreground =
                     (SolidColorBrush)FindResource("CriticalBrush");
+
+                AnalyzeBtn.IsEnabled = false;
 
                 MessageBox.Show(
                     ex.Message,
@@ -213,44 +227,77 @@ namespace Multi_Layer_Spoofing_Detector
                 OpenFileDialog openFileDialog = new OpenFileDialog
                 {
                     Title = "Select PCAP File - File Upload Module",
-                    Filter = "PCAP files (*.pcap;*.pcapng)|*.pcap;*.pcapng|All files (*.*)|*.*",
-                    FilterIndex = 1,
+                    Filter = "PCAP files (*.pcap;*.pcapng)|*.pcap;*.pcapng",
                     Multiselect = false
                 };
 
-                if (openFileDialog.ShowDialog() == true)
+                if (openFileDialog.ShowDialog() != true)
+                    return;
+
+                string selectedPath = openFileDialog.FileName;
+                string extension = System.IO.Path.GetExtension(selectedPath)?.ToLower();
+
+                if (extension != ".pcap" && extension != ".pcapng")
                 {
-                    _currentPcapFilePath = openFileDialog.FileName;
-                    FileInfo fileInfo = new FileInfo(_currentPcapFilePath);
+                    MessageBox.Show(
+                        "Invalid file type selected.\n\nOnly PCAP (.pcap, .pcapng) files are allowed.",
+                        "Invalid File",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning
+                    );
 
-                    FileInfoPanel.Visibility = Visibility.Visible;
-                    FileNameText.Text = System.IO.Path.GetFileName(_currentPcapFilePath);
-                    FileStatusText.Text = "File uploaded - Ready for analysis";
-                    StatusIndicator.Fill = (SolidColorBrush)FindResource("SafeBrush");
-                    FileSizeText.Text = FormatFileSize(fileInfo.Length);
+                    AnalyzeBtn.IsEnabled = false;
+                    FileInfoPanel.Visibility = Visibility.Collapsed;
 
-                    UploadModuleStatus.Text = "✓ PCAP file loaded successfully";
-                    UploadModuleStatus.Foreground = (SolidColorBrush)FindResource("SafeBrush");
+                    UploadModuleStatus.Text = "✗ Invalid file format";
+                    UploadModuleStatus.Foreground = (SolidColorBrush)FindResource("CriticalBrush");
 
-                    AnalysisModuleStatus.Text = "✓ Ready to process packets";
-                    AnalysisModuleStatus.Foreground = (SolidColorBrush)FindResource("SafeBrush");
-                    AnalysisModuleDetails.Text = $"File: {System.IO.Path.GetFileName(_currentPcapFilePath)}";
-
-                    AnalyzeBtn.IsEnabled = true;
-
-                    MessageBox.Show("PCAP file uploaded successfully to File Upload Module!",
-                        "File Upload Module", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
                 }
+
+                _currentPcapFilePath = selectedPath;
+                FileInfo fileInfo = new FileInfo(_currentPcapFilePath);
+
+                FileInfoPanel.Visibility = Visibility.Visible;
+                FileNameText.Text = System.IO.Path.GetFileName(_currentPcapFilePath);
+                FileSizeText.Text = FormatFileSize(fileInfo.Length);
+
+                FileStatusText.Text = "File uploaded - Ready for analysis";
+                StatusIndicator.Fill = (SolidColorBrush)FindResource("SafeBrush");
+
+                UploadModuleStatus.Text = "✓ PCAP file loaded successfully";
+                UploadModuleStatus.Foreground = (SolidColorBrush)FindResource("SafeBrush");
+
+                AnalysisModuleStatus.Text = "✓ Ready to process packets";
+                AnalysisModuleStatus.Foreground = (SolidColorBrush)FindResource("SafeBrush");
+                AnalysisModuleDetails.Text = $"File: {System.IO.Path.GetFileName(_currentPcapFilePath)}";
+
+                AnalyzeBtn.IsEnabled = true;
+
+                MessageBox.Show(
+                    "PCAP file uploaded successfully to File Upload Module.",
+                    "File Upload Module",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information
+                );
             }
+
             catch (Exception ex)
             {
                 UploadModuleStatus.Text = "✗ Upload failed";
                 UploadModuleStatus.Foreground = (SolidColorBrush)FindResource("CriticalBrush");
 
-                MessageBox.Show($"Error in File Upload Module: {ex.Message}", "Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                AnalyzeBtn.IsEnabled = false;
+
+                MessageBox.Show(
+                    $"Error in File Upload Module:\n{ex.Message}",
+                    "Upload Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error
+                );
             }
         }
+
 
         private async void AnalyzeBtn_Click(object sender, RoutedEventArgs e)
         {
@@ -266,6 +313,13 @@ namespace Multi_Layer_Spoofing_Detector
                 {
                     LoadingProgressText.Text = message;
                 });
+
+                if (!_isMlIntegrationReady || _mlIntegration == null)
+                {
+                    throw new InvalidOperationException(
+                        "ML integration is not ready. Please verify Docker and required images."
+                    );
+                }
 
                 var mlResult = await _mlIntegration.AnalyzePcapAsync(_currentPcapFilePath, progress);
 
@@ -304,18 +358,18 @@ namespace Multi_Layer_Spoofing_Detector
                 else
                     _currentNetworkStatus = "SECURE";
 
-                _repo.InsertCase(
+                string pcapHash = ComputeSHA256FromFile(_currentPcapFilePath);
+
+                _repo.InsertAnalysisCase(
                     _currentCaseId,
                     System.IO.Path.GetFileName(_currentPcapFilePath),
-                    ComputeSHA256(_currentPcapFilePath),
+                    pcapHash,
                     _currentNetworkStatus,
-                    _reports[0].PacketsAnalyzed
-                );
-
-                _repo.InsertThreatAlerts(_currentCaseId, _threatAlerts);
-                _repo.InsertAnalysisResults(_currentCaseId, _analysisResults);
-
-                _repo.InsertHash(_currentCaseId, "PCAP", ComputeSHA256(_currentPcapFilePath));
+                     _reports[0].PacketsAnalyzed,
+                    _threatAlerts,
+                    _analysisResults,
+                    pcapHash
+                 );
 
 
                 LoadingProgressText.Text = "Results Display - Preparing outputs...";
@@ -1003,6 +1057,13 @@ body {{ font-family: Segoe UI; background:#f5f5f5; padding:20px; }}
             using var sha256 = SHA256.Create();
             byte[] bytes = Encoding.UTF8.GetBytes(content);
             byte[] hash = sha256.ComputeHash(bytes);
+            return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+        }
+        private static string ComputeSHA256FromFile(string filePath)
+        {
+            using var sha256 = SHA256.Create();
+            using var stream = File.OpenRead(filePath);
+            byte[] hash = sha256.ComputeHash(stream);
             return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
         }
 
