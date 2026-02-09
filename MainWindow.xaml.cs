@@ -183,8 +183,8 @@ namespace Multi_Layer_Spoofing_Detector
                     break;
             }
 
-            NetworkStatusText.Text = _currentNetworkStatus;
-            NetworkStatusIcon.Text = statusIcon;
+            NetworkStatusText.Text = "";
+            NetworkStatusIcon.Text = "";
             NetworkStatusIndicator.Background = statusColor;
 
             CvssScoreText.Text = $"CV Score: {_currentCvssScore:0.0}";
