@@ -1,5 +1,7 @@
 ﻿using Microsoft.Win32;
 using Multi_Layer_Spoofing_Detector.data;
+using Multi_Layer_Spoofing_Detector.Models;
+using Multi_Layer_Spoofing_Detector.Risk;
 using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
@@ -112,38 +114,6 @@ namespace Multi_Layer_Spoofing_Detector
                     MessageBoxImage.Error
                 );
             }
-        }
-
-        #endregion
-
-        #region Data Models
-
-        public class ThreatAlert
-        {
-            public string Type { get; set; }
-            public string Description { get; set; }
-            public DateTime Timestamp { get; set; }
-            public string Severity { get; set; }
-            public string IpAddress { get; set; }
-            public string AdditionalInfo { get; set; }
-        }
-
-        public class AnalysisResult
-        {
-            public string Category { get; set; }
-            public string RiskLevel { get; set; }
-            public string Description { get; set; }
-            public string Details { get; set; }
-            public int Confidence { get; set; }
-        }
-
-        public class Report
-        {
-            public string Name { get; set; }
-            public DateTime Timestamp { get; set; }
-            public string Status { get; set; }
-            public int ThreatsDetected { get; set; }
-            public int PacketsAnalyzed { get; set; }
         }
 
         #endregion
@@ -836,7 +806,7 @@ namespace Multi_Layer_Spoofing_Detector
             var caseMeta = _repo.GetCaseMetadata(_currentCaseId);
             var hashes = _repo.GetHashes(_currentCaseId);
 
-            var risk = ComputeCvssAndMitreForReport(analysisResults);
+            var risk = RiskCalculator.ComputeReportRisk(analysisResults);
 
             var reportDate = DateTime.Now;
             var investigator = Environment.UserName;
@@ -1001,7 +971,7 @@ body {{ font-family: Segoe UI; background:#f5f5f5; padding:20px; }}
             var caseMeta = _repo.GetCaseMetadata(_currentCaseId);
             var hashes = _repo.GetHashes(_currentCaseId);
 
-            var risk = ComputeCvssAndMitreForReport(analysisResults);
+            var risk = RiskCalculator.ComputeReportRisk(analysisResults);
 
             var reportBody = new
             {
@@ -1129,146 +1099,10 @@ body {{ font-family: Segoe UI; background:#f5f5f5; padding:20px; }}
 
         private void ComputeRiskAndMitreFromFindings()
         {
-            if (_analysisResults == null || _analysisResults.Count == 0)
-            {
-                _currentCvssScore = 0.0;
-                _currentCvssRating = "NONE";
-                _currentMitreTechniques = new List<string> { "No findings" };
-                return;
-            }
-
-            double maxScore = 0.0;
-
-            foreach (var r in _analysisResults)
-            {
-                double baseScore = r.RiskLevel switch
-                {
-                    "High" => 9.3,
-                    "Medium" => 6.5,
-                    "Low" => 3.1,
-                    _ => 0.0
-                };
-
-                double confFactor = Math.Clamp(r.Confidence / 100.0, 0.0, 1.0);
-                double score = baseScore * confFactor;
-
-                if (score > maxScore) maxScore = score;
-            }
-
-            _currentCvssScore = Math.Round(maxScore, 1);
-            _currentCvssRating = CvssRating(_currentCvssScore);
-
-            var mapped = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-            foreach (var r in _analysisResults)
-            {
-                var cat = (r.Category ?? "").Trim().ToUpperInvariant();
-                switch (cat)
-                {
-                    case "ARP":
-                        mapped.Add("T1557 – Adversary-in-the-Middle (ARP Spoofing)");
-                        break;
-
-                    case "DNS":
-                        mapped.Add("T1568.002 – DNS Manipulation");
-                        break;
-
-                    case "IP":
-                        mapped.Add("Network Traffic Manipulation (IP Spoofing Behavior)");
-                        break;
-
-                }
-            }
-
-            _currentMitreTechniques = mapped.Count == 0
-                ? new List<string> { "No mapped techniques" }
-                : mapped.ToList();
-        }
-
-
-        private static string CvssRating(double score)
-        {
-            if (score <= 0.0) return "NONE";
-            if (score < 4.0) return "LOW";
-            if (score < 7.0) return "MEDIUM";
-            if (score < 9.0) return "HIGH";
-            return "CRITICAL";
-        }
-
-        private sealed class ReportRisk
-        {
-            public double Score { get; init; }
-            public string Rating { get; init; } = "NONE";
-            public List<string> SummaryBullets { get; init; } = new();
-            public List<string> MitreItems { get; init; } = new();
-        }
-
-        private ReportRisk ComputeCvssAndMitreForReport(List<AnalysisResult> analysisResults)
-        {
-            if (analysisResults == null || analysisResults.Count == 0)
-            {
-                return new ReportRisk
-                {
-                    Score = 0.0,
-                    Rating = "NONE",
-                    SummaryBullets = new List<string> { "No findings detected from the analyzed PCAP." },
-                    MitreItems = new List<string>()
-                };
-            }
-
-            double maxScore = 0.0;
-
-            foreach (var r in analysisResults)
-            {
-                double baseScore = (r.RiskLevel ?? "").Trim() switch
-                {
-                    "High" => 9.3,
-                    "Medium" => 6.5,
-                    "Low" => 3.1,
-                    _ => 0.0
-                };
-
-                double confFactor = Math.Clamp(r.Confidence / 100.0, 0.0, 1.0);
-                double score = baseScore * confFactor;
-                if (score > maxScore) maxScore = score;
-            }
-
-            double finalScore = Math.Round(maxScore, 1);
-            string rating = CvssRating(finalScore);
-
-            var mitre = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-            foreach (var r in analysisResults)
-            {
-                var cat = (r.Category ?? "").Trim().ToUpperInvariant();
-                switch (cat)
-                {
-                    case "ARP":
-                        mitre.Add("Adversary-in-the-Middle (network interception)");
-                        break;
-                    case "DNS":
-                        mitre.Add("DNS manipulation / traffic redirection");
-                        break;
-                    case "IP":
-                        mitre.Add("Network traffic manipulation (spoofed source identity)");
-                        break;
-                }
-            }
-
-            var bullets = new List<string>
-    {
-        $"Highest observed risk derived from {analysisResults.Count} findings.",
-        $"CVSS-like score is confidence-weighted using ML confidence values.",
-        $"Categories involved: {string.Join(", ", analysisResults.Select(x => x.Category).Distinct())}."
-    };
-
-            return new ReportRisk
-            {
-                Score = finalScore,
-                Rating = rating,
-                SummaryBullets = bullets,
-                MitreItems = mitre.ToList()
-            };
+            var risk = RiskCalculator.ComputeUiRisk(_analysisResults);
+            _currentCvssScore = risk.Score;
+            _currentCvssRating = risk.Rating;
+            _currentMitreTechniques = risk.MitreTechniques;
         }
 
         private static string HtmlSafe(string? s)
