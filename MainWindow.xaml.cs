@@ -10,7 +10,6 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Windows.Threading;
-using static Multi_Layer_Spoofing_Detector.MainWindow;
 
 namespace Multi_Layer_Spoofing_Detector
 {
@@ -35,10 +34,12 @@ namespace Multi_Layer_Spoofing_Detector
         private string JsonReportDirectory =>
             System.IO.Path.Combine(BaseReportDirectory, "json");
 
-
         private string _currentNetworkStatus = "SECURE";
         private DateTime _lastAnalysisTime;
 
+        private double _currentCvssScore = 0.0;
+        private string _currentCvssRating = "NONE";
+        private List<string> _currentMitreTechniques = new();
 
         private MLIntegration? _mlIntegration;
         private bool _isMlIntegrationReady;
@@ -182,39 +183,46 @@ namespace Multi_Layer_Spoofing_Detector
         private void UpdateNetworkStatus()
         {
             string statusIcon;
-            string statusDescription;
             SolidColorBrush statusColor;
 
             switch (_currentNetworkStatus)
             {
                 case "CRITICAL":
                     statusIcon = "🚨";
-                    statusDescription = "Critical threats detected";
                     statusColor = (SolidColorBrush)FindResource("CriticalBrush");
                     break;
 
-                case "WARNING":
+                case "HIGH":
                     statusIcon = "⚠️";
-                    statusDescription = "Warnings detected";
+                    statusColor = (SolidColorBrush)FindResource("CriticalBrush");
+                    break;
+
+                case "MEDIUM":
+                    statusIcon = "⚠️";
+                    statusColor = (SolidColorBrush)FindResource("WarningBrush");
+                    break;
+
+                case "LOW":
+                    statusIcon = "🟡";
                     statusColor = (SolidColorBrush)FindResource("WarningBrush");
                     break;
 
                 default:
                     statusIcon = "✅";
-                    statusDescription = "No threats detected";
                     statusColor = (SolidColorBrush)FindResource("SafeBrush");
                     break;
             }
 
             NetworkStatusText.Text = _currentNetworkStatus;
             NetworkStatusIcon.Text = statusIcon;
-            NetworkStatusDescription.Text = statusDescription;
             NetworkStatusIndicator.Background = statusColor;
+
+            CvssScoreText.Text = $"CV Score: {_currentCvssScore:0.0}";
+
+            MitreBullets.ItemsSource = _currentMitreTechniques ?? new List<string> { "No findings" };
 
             LastScanText.Text = $"Last scan: {_lastAnalysisTime:HH:mm:ss}";
         }
-
-
 
         #endregion        
 
@@ -348,15 +356,12 @@ namespace Multi_Layer_Spoofing_Detector
 
                 ConvertMLResultsToAppFormat(mlResult);
 
+                ComputeRiskAndMitreFromFindings();
+
+                _currentNetworkStatus = _currentCvssRating;
+
                 _currentCaseId = $"SPOOF-{DateTime.Now:yyyyMMdd-HHmmss}";
                 _lastAnalysisTime = DateTime.Now;
-
-                if (_threatAlerts.Any(a => a.Severity == "Critical"))
-                    _currentNetworkStatus = "CRITICAL";
-                else if (_threatAlerts.Any(a => a.Severity == "Warning"))
-                    _currentNetworkStatus = "WARNING";
-                else
-                    _currentNetworkStatus = "SECURE";
 
                 string pcapHash = ComputeSHA256FromFile(_currentPcapFilePath);
 
@@ -595,7 +600,6 @@ namespace Multi_Layer_Spoofing_Detector
             }
         }
 
-
         private void GenerateJsonReportBtn_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -635,7 +639,6 @@ namespace Multi_Layer_Spoofing_Detector
                 );
             }
         }
-
 
         #endregion
 
@@ -764,7 +767,6 @@ namespace Multi_Layer_Spoofing_Detector
                 }
             }
         }
-
         private Border CreateAnalysisResultUI(AnalysisResult result)
         {
             string backgroundColor = result.RiskLevel switch
@@ -834,6 +836,8 @@ namespace Multi_Layer_Spoofing_Detector
             var caseMeta = _repo.GetCaseMetadata(_currentCaseId);
             var hashes = _repo.GetHashes(_currentCaseId);
 
+            var risk = ComputeCvssAndMitreForReport(analysisResults);
+
             var reportDate = DateTime.Now;
             var investigator = Environment.UserName;
 
@@ -843,22 +847,35 @@ namespace Multi_Layer_Spoofing_Detector
             int avgConfidence = analysisResults.Any()
                 ? (int)Math.Round(analysisResults.Average(r => r.Confidence))
                 : 0;
-
-            string networkStatusClass =
-                caseMeta.NetworkStatus == "CRITICAL" ? "severity-critical" :
-                caseMeta.NetworkStatus == "WARNING" ? "severity-warning" :
-                                                       "severity-safe";
+            string riskClass = risk.Rating.ToLowerInvariant(); 
 
             string threatRows = threatAlerts.Any()
                 ? string.Join("", threatAlerts.Select(alert => $@"
 <tr>
     <td>{alert.Timestamp:yyyy-MM-dd HH:mm:ss}</td>
-    <td><span class='severity-badge severity-{alert.Severity.ToLower()}'>{alert.Severity}</span></td>
-    <td>{alert.Type}</td>
-    <td>{alert.IpAddress}</td>
-    <td>{alert.Description}<br/><small>{alert.AdditionalInfo}</small></td>
+    <td><span class='badge sev-{HtmlSafe(alert.Severity.ToLower())}'>{HtmlSafe(alert.Severity)}</span></td>
+    <td>{HtmlSafe(alert.Type)}</td>
+    <td>{HtmlSafe(alert.IpAddress)}</td>
+    <td>{HtmlSafe(alert.Description)}<br/><small>{HtmlSafe(alert.AdditionalInfo)}</small></td>
 </tr>"))
                 : "<tr><td colspan='5'>No threat alerts detected.</td></tr>";
+
+            string hashSection = hashes.Any()
+                ? "<table class='table'>" +
+                  "<thead><tr><th>Evidence</th><th>Algorithm</th><th>Hash</th><th>Timestamp</th></tr></thead><tbody>" +
+                  string.Join("", hashes.Select(h => $@"
+<tr>
+    <td>{HtmlSafe(h.EvidenceType)}</td>
+    <td>{HtmlSafe(h.Algorithm)}</td>
+    <td class='mono'>{HtmlSafe(h.HashValue)}</td>
+    <td>{h.Timestamp:yyyy-MM-dd HH:mm:ss}</td>
+</tr>")) +
+                  "</tbody></table>"
+                : "<p>No hash records found.</p>";
+
+            string mitreBullets = risk.MitreItems.Any()
+                ? "<ul>" + string.Join("", risk.MitreItems.Select(x => $"<li>{HtmlSafe(x)}</li>")) + "</ul>"
+                : "<p>No mapped techniques.</p>";
 
             string html = $@"<!DOCTYPE html>
 <html>
@@ -869,19 +886,35 @@ namespace Multi_Layer_Spoofing_Detector
 body {{ font-family: Segoe UI; background:#f5f5f5; padding:20px; }}
 .container {{ background:white; padding:40px; max-width:1200px; margin:auto; }}
 .header {{ border-bottom:4px solid #00C9A7; margin-bottom:30px; }}
-.card {{ padding:20px; border-left:4px solid #00C9A7; background:#f8f9fa; }}
+
+.cards {{ display:grid; grid-template-columns:repeat(4,1fr); gap:15px; }}
+.card {{ padding:20px; border-left:4px solid #00C9A7; background:#f8f9fa; border-radius:10px; }}
 .card.critical {{ border-color:#FF4757; }}
 .card.warning {{ border-color:#FFA502; }}
 .card.safe {{ border-color:#26DE81; }}
-.threat-table {{ width:100%; border-collapse:collapse; }}
-.threat-table th {{ background:#1E1E2E; color:white; padding:10px; }}
-.threat-table td {{ padding:10px; border-bottom:1px solid #ddd; }}
-.severity-badge {{ padding:4px 10px; color:white; border-radius:10px; font-size:12px; }}
-.severity-critical {{ background:#FF4757; }}
-.severity-warning {{ background:#FFA502; }}
-.severity-safe {{ background:#26DE81; }}
+
+.badge {{ padding:4px 10px; color:white; border-radius:10px; font-size:12px; display:inline-block; }}
+.sev-critical {{ background:#FF4757; }}
+.sev-warning  {{ background:#FFA502; }}
+.sev-safe     {{ background:#26DE81; }}
+
+.cvss-critical {{ background:#FF4757; }}
+.cvss-high     {{ background:#FF6B6B; }}
+.cvss-medium   {{ background:#FFA502; }}
+.cvss-low      {{ background:#26DE81; }}
+.cvss-none     {{ background:#2ECC71; }}
+
+.table {{ width:100%; border-collapse:collapse; margin-top:10px; }}
+.table th {{ background:#1E1E2E; color:white; padding:10px; text-align:left; }}
+.table td {{ padding:10px; border-bottom:1px solid #ddd; vertical-align:top; }}
+
+.riskbox {{ margin-top:18px; padding:16px; background:#f8f9fa; border-radius:12px; border-left:6px solid #00C9A7; }}
+.riskTitle {{ font-size:20px; font-weight:700; margin:0; }}
+.riskScore {{ font-size:16px; margin-top:8px; }}
+.scoreBadge {{ font-weight:700; padding:4px 10px; border-radius:10px; color:white; }}
+.mono {{ font-family: Consolas; font-size:12px; word-break:break-all; }}
+
 .footer {{ margin-top:40px; text-align:center; color:#666; font-size:13px; }}
-.hash {{ font-family: Consolas; font-size:12px; color:#999; word-break:break-all; }}
 </style>
 </head>
 <body>
@@ -893,30 +926,48 @@ body {{ font-family: Segoe UI; background:#f5f5f5; padding:20px; }}
 </div>
 
 <table>
-<tr><td><b>Case Number:</b></td><td>{caseMeta.CaseId}</td></tr>
-<tr><td><b>Investigator:</b></td><td>{investigator}</td></tr>
+<tr><td><b>Case Number:</b></td><td>{HtmlSafe(caseMeta.CaseId)}</td></tr>
+<tr><td><b>Investigator:</b></td><td>{HtmlSafe(investigator)}</td></tr>
 <tr><td><b>Report Generated:</b></td><td>{reportDate:yyyy-MM-dd HH:mm:ss}</td></tr>
-<tr><td><b>Network Status:</b></td>
-<td><span class='severity-badge {networkStatusClass}'>{caseMeta.NetworkStatus}</span></td></tr>
+<tr><td><b>PCAP File:</b></td><td>{HtmlSafe(caseMeta.PcapFile)}</td></tr>
 </table>
 
+<div class='riskbox'>
+  <p class='riskTitle'>System Risk (CVSS + MITRE)</p>
+  <div class='riskScore'>
+    <span class='badge cvss-{riskClass}'>{HtmlSafe(risk.Rating)}</span>
+    &nbsp;
+    <span class='scoreBadge cvss-{riskClass}'>Score: {risk.Score:0.0}</span>
+  </div>
+  <div style='margin-top:10px;'>
+    <b>Summary</b>
+    <ul>
+      {string.Join("", risk.SummaryBullets.Select(b => $"<li>{HtmlSafe(b)}</li>"))}
+    </ul>
+  </div>
+  <div style='margin-top:10px;'>
+    <b>MITRE ATT&CK (mapped techniques)</b>
+    {mitreBullets}
+  </div>
+</div>
+
 <h2>Executive Summary</h2>
-<div style='display:grid;grid-template-columns:repeat(4,1fr);gap:15px;'>
-<div class='card critical'><b>Critical</b><br/>{criticalCount}</div>
-<div class='card warning'><b>Warning</b><br/>{warningCount}</div>
-<div class='card'><b>Flows</b><br/>{totalPackets:N0}</div>
-<div class='card safe'><b>Confidence</b><br/>{avgConfidence}%</div>
+<div class='cards'>
+  <div class='card critical'><b>Critical</b><br/>{criticalCount}</div>
+  <div class='card warning'><b>Warning</b><br/>{warningCount}</div>
+  <div class='card'><b>Flows</b><br/>{totalPackets:N0}</div>
+  <div class='card safe'><b>Confidence</b><br/>{avgConfidence}%</div>
 </div>
 
 <h2>Detected Threat Alerts</h2>
-<table class='threat-table'>
+<table class='table'>
 <thead>
 <tr>
-<th>Timestamp</th>
-<th>Severity</th>
-<th>Type</th>
-<th>Source IP</th>
-<th>Description</th>
+  <th>Timestamp</th>
+  <th>Severity</th>
+  <th>Type</th>
+  <th>Source IP</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
@@ -924,37 +975,21 @@ body {{ font-family: Segoe UI; background:#f5f5f5; padding:20px; }}
 </tbody>
 </table>
 
+<h2>Chain of Custody (Hashes)</h2>
+{hashSection}
+
 <div class='footer'>
-<p><strong>AI-Based Multi-Layer Spoofing Detection System</strong></p>
-<p>Report ID: {caseMeta.CaseId}</p>
-<p class='hash'>Chain of Custody:<br/>__HASH_SECTION__</p>
+  <p><strong>AI-Based Multi-Layer Spoofing Detection System</strong></p>
+  <p>Report ID: {HtmlSafe(caseMeta.CaseId)}</p>
+  <p>Generated: {reportDate:yyyy-MM-dd HH:mm:ss}</p>
 </div>
 
 </div>
 </body>
 </html>";
 
-            string hashSection = hashes.Any()
-    ? "<table class='threat-table'>" +
-      "<thead><tr>" +
-      "<th>Evidence</th><th>Algorithm</th><th>Hash</th><th>Timestamp</th>" +
-      "</tr></thead><tbody>" +
-      string.Join("", hashes.Select(h => $@"
-        <tr>
-            <td>{h.EvidenceType}</td>
-            <td>{h.Algorithm}</td>
-            <td style='font-family:Consolas;font-size:12px'>{h.HashValue}</td>
-            <td>{h.Timestamp:yyyy-MM-dd HH:mm:ss}</td>
-        </tr>
-      ")) +
-      "</tbody></table>"
-    : "<p>No hash records found.</p>";
-            html = html.Replace("__HASH_SECTION__", hashSection);
-
-
             File.WriteAllText(filePath, html);
         }
-
 
         private void GenerateForensicReportJSON(string filePath)
         {
@@ -966,6 +1001,8 @@ body {{ font-family: Segoe UI; background:#f5f5f5; padding:20px; }}
             var caseMeta = _repo.GetCaseMetadata(_currentCaseId);
             var hashes = _repo.GetHashes(_currentCaseId);
 
+            var risk = ComputeCvssAndMitreForReport(analysisResults);
+
             var reportBody = new
             {
                 ForensicReport = new
@@ -973,11 +1010,20 @@ body {{ font-family: Segoe UI; background:#f5f5f5; padding:20px; }}
                     Metadata = new
                     {
                         caseMeta.CaseId,
+                        caseMeta.PcapFile,
                         Investigator = Environment.UserName,
                         Organization = "AI-Based Spoofing Detection System",
-                        caseMeta.NetworkStatus,
-                        caseMeta.PacketsAnalyzed,
-                        caseMeta.PcapHash
+                        ReportGenerated = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                        PacketsAnalyzed = caseMeta.PacketsAnalyzed,
+                        PcapHash = caseMeta.PcapHash
+                    },
+
+                    SystemRisk = new
+                    {
+                        CvssScore = risk.Score,
+                        CvssRating = risk.Rating,
+                        Summary = risk.SummaryBullets,
+                        MitreAttack = risk.MitreItems
                     },
 
                     ExecutiveSummary = new
@@ -998,7 +1044,7 @@ body {{ font-family: Segoe UI; background:#f5f5f5; padding:20px; }}
                         a.IpAddress,
                         a.Description,
                         a.AdditionalInfo
-                    }),
+                    }).ToList(),
 
                     AnalysisResults = analysisResults.Select(r => new
                     {
@@ -1007,7 +1053,15 @@ body {{ font-family: Segoe UI; background:#f5f5f5; padding:20px; }}
                         r.Description,
                         r.Details,
                         r.Confidence
-                    })
+                    }).ToList(),
+
+                    ChainOfCustody = hashes.Select(h => new
+                    {
+                        h.EvidenceType,
+                        h.Algorithm,
+                        h.HashValue,
+                        Timestamp = h.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")
+                    }).ToList()
                 }
             };
 
@@ -1016,14 +1070,14 @@ body {{ font-family: Segoe UI; background:#f5f5f5; padding:20px; }}
                 WriteIndented = true
             });
 
-            string hash = ComputeSHA256(jsonBody);
+            string reportHash = ComputeSHA256(jsonBody);
 
             var finalJson = new
             {
                 ReportHash = new
                 {
                     Algorithm = "SHA-256",
-                    Value = hash
+                    Value = reportHash
                 },
                 Report = reportBody
             };
@@ -1071,6 +1125,156 @@ body {{ font-family: Segoe UI; background:#f5f5f5; padding:20px; }}
         {
             Directory.CreateDirectory(HtmlReportDirectory);
             Directory.CreateDirectory(JsonReportDirectory);
+        }
+
+        private void ComputeRiskAndMitreFromFindings()
+        {
+            if (_analysisResults == null || _analysisResults.Count == 0)
+            {
+                _currentCvssScore = 0.0;
+                _currentCvssRating = "NONE";
+                _currentMitreTechniques = new List<string> { "No findings" };
+                return;
+            }
+
+            double maxScore = 0.0;
+
+            foreach (var r in _analysisResults)
+            {
+                double baseScore = r.RiskLevel switch
+                {
+                    "High" => 9.3,
+                    "Medium" => 6.5,
+                    "Low" => 3.1,
+                    _ => 0.0
+                };
+
+                double confFactor = Math.Clamp(r.Confidence / 100.0, 0.0, 1.0);
+                double score = baseScore * confFactor;
+
+                if (score > maxScore) maxScore = score;
+            }
+
+            _currentCvssScore = Math.Round(maxScore, 1);
+            _currentCvssRating = CvssRating(_currentCvssScore);
+
+            var mapped = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var r in _analysisResults)
+            {
+                var cat = (r.Category ?? "").Trim().ToUpperInvariant();
+                switch (cat)
+                {
+                    case "ARP":
+                        mapped.Add("T1557 – Adversary-in-the-Middle (ARP Spoofing)");
+                        break;
+
+                    case "DNS":
+                        mapped.Add("T1568.002 – DNS Manipulation");
+                        break;
+
+                    case "IP":
+                        mapped.Add("Network Traffic Manipulation (IP Spoofing Behavior)");
+                        break;
+
+                }
+            }
+
+            _currentMitreTechniques = mapped.Count == 0
+                ? new List<string> { "No mapped techniques" }
+                : mapped.ToList();
+        }
+
+
+        private static string CvssRating(double score)
+        {
+            if (score <= 0.0) return "NONE";
+            if (score < 4.0) return "LOW";
+            if (score < 7.0) return "MEDIUM";
+            if (score < 9.0) return "HIGH";
+            return "CRITICAL";
+        }
+
+        private sealed class ReportRisk
+        {
+            public double Score { get; init; }
+            public string Rating { get; init; } = "NONE";
+            public List<string> SummaryBullets { get; init; } = new();
+            public List<string> MitreItems { get; init; } = new();
+        }
+
+        private ReportRisk ComputeCvssAndMitreForReport(List<AnalysisResult> analysisResults)
+        {
+            if (analysisResults == null || analysisResults.Count == 0)
+            {
+                return new ReportRisk
+                {
+                    Score = 0.0,
+                    Rating = "NONE",
+                    SummaryBullets = new List<string> { "No findings detected from the analyzed PCAP." },
+                    MitreItems = new List<string>()
+                };
+            }
+
+            double maxScore = 0.0;
+
+            foreach (var r in analysisResults)
+            {
+                double baseScore = (r.RiskLevel ?? "").Trim() switch
+                {
+                    "High" => 9.3,
+                    "Medium" => 6.5,
+                    "Low" => 3.1,
+                    _ => 0.0
+                };
+
+                double confFactor = Math.Clamp(r.Confidence / 100.0, 0.0, 1.0);
+                double score = baseScore * confFactor;
+                if (score > maxScore) maxScore = score;
+            }
+
+            double finalScore = Math.Round(maxScore, 1);
+            string rating = CvssRating(finalScore);
+
+            var mitre = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var r in analysisResults)
+            {
+                var cat = (r.Category ?? "").Trim().ToUpperInvariant();
+                switch (cat)
+                {
+                    case "ARP":
+                        mitre.Add("Adversary-in-the-Middle (network interception)");
+                        break;
+                    case "DNS":
+                        mitre.Add("DNS manipulation / traffic redirection");
+                        break;
+                    case "IP":
+                        mitre.Add("Network traffic manipulation (spoofed source identity)");
+                        break;
+                }
+            }
+
+            var bullets = new List<string>
+    {
+        $"Highest observed risk derived from {analysisResults.Count} findings.",
+        $"CVSS-like score is confidence-weighted using ML confidence values.",
+        $"Categories involved: {string.Join(", ", analysisResults.Select(x => x.Category).Distinct())}."
+    };
+
+            return new ReportRisk
+            {
+                Score = finalScore,
+                Rating = rating,
+                SummaryBullets = bullets,
+                MitreItems = mitre.ToList()
+            };
+        }
+
+        private static string HtmlSafe(string? s)
+        {
+            if (string.IsNullOrEmpty(s)) return "";
+            return System.Net.WebUtility.HtmlEncode(s);
         }
 
         #endregion

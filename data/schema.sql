@@ -7,21 +7,21 @@ CREATE TABLE IF NOT EXISTS Cases (
     AnalysisTime TEXT
 );
 
-
 CREATE TABLE IF NOT EXISTS ThreatAlerts (
     Id INTEGER PRIMARY KEY AUTOINCREMENT,
-    CaseId TEXT,
+    CaseId TEXT NOT NULL,
     Timestamp TEXT,
     Severity TEXT,
     Type TEXT,
-    SourceIP TEXT,
+    IpAddress TEXT,
     Description TEXT,
+    AdditionalInfo TEXT,
     FOREIGN KEY (CaseId) REFERENCES Cases(CaseId)
 );
 
 CREATE TABLE IF NOT EXISTS AnalysisResults (
     Id INTEGER PRIMARY KEY AUTOINCREMENT,
-    CaseId TEXT,
+    CaseId TEXT NOT NULL,
     Category TEXT,
     RiskLevel TEXT,
     Description TEXT,
@@ -30,12 +30,12 @@ CREATE TABLE IF NOT EXISTS AnalysisResults (
     FOREIGN KEY (CaseId) REFERENCES Cases(CaseId)
 );
 
-CREATE TABLE IF NOT EXISTS IntegrityHashes (
+CREATE TABLE IF NOT EXISTS Hashes (
     Id INTEGER PRIMARY KEY AUTOINCREMENT,
-    CaseId TEXT,
-    ArtifactType TEXT,
-    HashAlgorithm TEXT,
+    CaseId TEXT NOT NULL,
+    EvidenceType TEXT,
     HashValue TEXT,
-    GeneratedAt TEXT,
+    Algorithm TEXT,
+    Timestamp TEXT,
     FOREIGN KEY (CaseId) REFERENCES Cases(CaseId)
 );

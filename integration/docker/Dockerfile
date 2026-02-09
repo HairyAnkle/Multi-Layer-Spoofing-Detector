@@ -5,7 +5,6 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# Install Python dependencies
 RUN pip install --upgrade pip
 
 RUN pip install \
@@ -18,9 +17,7 @@ RUN pip install \
     xgboost==3.1.3 \
     joblib
 
-# Copy backend + model
 COPY integration/backend/ backend/
 COPY integration/models/ models/
 
-# Entrypoint
 ENTRYPOINT ["python", "backend/spoofing_detector.py"]

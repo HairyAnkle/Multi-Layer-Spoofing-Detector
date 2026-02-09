@@ -121,11 +121,9 @@ class CICPreprocessor(BaseEstimator, TransformerMixin):
         self.rename_map = self.DEFAULT_RENAME_MAP.copy()
         self.drop_columns = self.DEFAULT_DROP_COLUMNS.copy()
 
-
     def __setstate__(self, state):
         self.__dict__.update(state)
 
-        # Restore missing attributes from older models
         if not hasattr(self, "rename_map"):
             self.rename_map = self.DEFAULT_RENAME_MAP.copy()
 
@@ -175,3 +173,17 @@ class CICPreprocessor(BaseEstimator, TransformerMixin):
 
         X = pd.get_dummies(X, columns=["Protocol"], prefix="Protocol")
         return X.reindex(columns=self.feature_columns_, fill_value=0)
+
+
+
+
+
+
+
+
+
+
+
+
+
+

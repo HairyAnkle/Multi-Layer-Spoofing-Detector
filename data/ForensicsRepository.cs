@@ -12,94 +12,78 @@ namespace Multi_Layer_Spoofing_Detector.data
 
         public ForensicsRepository()
         {
-            string dbDir = Path.Combine(
-                AppDomain.CurrentDomain.BaseDirectory,
-                "database"
-            );
-
-            if (!Directory.Exists(dbDir))
-                Directory.CreateDirectory(dbDir);
+            string dbDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "database");
+            Directory.CreateDirectory(dbDir);
 
             string dbPath = Path.Combine(dbDir, "forensics.db");
-
             _connectionString = $"Data Source={dbPath};Version=3;";
 
             InitializeDatabase();
         }
 
-        // DATABASE INITIALIZATION
         private void InitializeDatabase()
         {
             using var conn = new SQLiteConnection(_connectionString);
             conn.Open();
 
             using var cmd = new SQLiteCommand(conn);
-
             cmd.CommandText = @"
-            CREATE TABLE IF NOT EXISTS Cases (
-                CaseId TEXT PRIMARY KEY,
-                PcapFile TEXT,
-                PcapHash TEXT,
-                NetworkStatus TEXT,
-                PacketsAnalyzed INTEGER,
-                AnalysisTime TEXT
-            );
+CREATE TABLE IF NOT EXISTS Cases (
+    CaseId TEXT PRIMARY KEY,
+    PcapFile TEXT,
+    PcapHash TEXT,
+    NetworkStatus TEXT,
+    PacketsAnalyzed INTEGER,
+    AnalysisTime TEXT
+);
 
-            CREATE TABLE IF NOT EXISTS ThreatAlerts (
-                Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                CaseId TEXT,
-                Timestamp TEXT,
-                Severity TEXT,
-                Type TEXT,
-                IpAddress TEXT,
-                Description TEXT,
-                AdditionalInfo TEXT
-            );
+CREATE TABLE IF NOT EXISTS ThreatAlerts (
+    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+    CaseId TEXT NOT NULL,
+    Timestamp TEXT,
+    Severity TEXT,
+    Type TEXT,
+    IpAddress TEXT,
+    Description TEXT,
+    AdditionalInfo TEXT
+);
 
-            CREATE TABLE IF NOT EXISTS AnalysisResults (
-                Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                CaseId TEXT,
-                Category TEXT,
-                RiskLevel TEXT,
-                Description TEXT,
-                Details TEXT,
-                Confidence REAL
-            );
+CREATE TABLE IF NOT EXISTS AnalysisResults (
+    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+    CaseId TEXT NOT NULL,
+    Category TEXT,
+    RiskLevel TEXT,
+    Description TEXT,
+    Details TEXT,
+    Confidence REAL
+);
 
-            CREATE TABLE IF NOT EXISTS Hashes (
-                Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                CaseId TEXT,
-                EvidenceType TEXT,
-                HashValue TEXT,
-                Algorithm TEXT,
-                Timestamp TEXT
-            );
-            ";
-
+CREATE TABLE IF NOT EXISTS Hashes (
+    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+    CaseId TEXT NOT NULL,
+    EvidenceType TEXT,
+    HashValue TEXT,
+    Algorithm TEXT,
+    Timestamp TEXT
+);
+";
             cmd.ExecuteNonQuery();
         }
 
-        // CASE METADATA
-        public void InsertCase(
+
+        private void InsertCase(
             string caseId,
             string pcapFile,
             string pcapHash,
             string networkStatus,
             int packetsAnalyzed,
             SQLiteConnection conn,
-            SQLiteTransaction transaction)
+            SQLiteTransaction tx)
         {
-
             using var cmd = new SQLiteCommand(@"
-                INSERT INTO Cases (
-                    CaseId, PcapFile, PcapHash,
-                    NetworkStatus, PacketsAnalyzed, AnalysisTime
-                )
-                VALUES (
-                    @caseId, @pcapFile, @pcapHash,
-                    @networkStatus, @packets, @time
-                );
-            ", conn, transaction);
+INSERT INTO Cases (CaseId, PcapFile, PcapHash, NetworkStatus, PacketsAnalyzed, AnalysisTime)
+VALUES (@caseId, @pcapFile, @pcapHash, @networkStatus, @packets, @time);
+            ", conn, tx);
 
             cmd.Parameters.AddWithValue("@caseId", caseId);
             cmd.Parameters.AddWithValue("@pcapFile", pcapFile);
@@ -123,15 +107,14 @@ namespace Multi_Layer_Spoofing_Detector.data
         {
             using var conn = new SQLiteConnection(_connectionString);
             conn.Open();
+            using var tx = conn.BeginTransaction();
 
-            using var transaction = conn.BeginTransaction();
+            InsertCase(caseId, pcapFile, pcapHash, networkStatus, packetsAnalyzed, conn, tx);
+            InsertThreatAlerts(caseId, alerts, conn, tx);
+            InsertAnalysisResults(caseId, results, conn, tx);
+            InsertHash(caseId, "PCAP", evidenceHash, conn, tx);
 
-            InsertCase(caseId, pcapFile, pcapHash, networkStatus, packetsAnalyzed, conn, transaction);
-            InsertThreatAlerts(caseId, alerts, conn, transaction);
-            InsertAnalysisResults(caseId, results, conn, transaction);
-            InsertHash(caseId, "PCAP", evidenceHash, conn, transaction);
-
-            transaction.Commit();
+            tx.Commit();
         }
 
         public ForensicCase GetCaseMetadata(string caseId)
@@ -140,17 +123,15 @@ namespace Multi_Layer_Spoofing_Detector.data
             conn.Open();
 
             using var cmd = new SQLiteCommand(@"
-                SELECT CaseId, PcapFile, PcapHash,
-                       NetworkStatus, PacketsAnalyzed, AnalysisTime
-                FROM Cases
-                WHERE CaseId = @caseId
-                LIMIT 1;
+SELECT CaseId, PcapFile, PcapHash, NetworkStatus, PacketsAnalyzed, AnalysisTime
+FROM Cases
+WHERE CaseId = @caseId
+LIMIT 1;
             ", conn);
 
             cmd.Parameters.AddWithValue("@caseId", caseId);
 
             using var reader = cmd.ExecuteReader();
-
             if (!reader.Read())
                 throw new Exception($"Case not found: {caseId}");
 
@@ -165,113 +146,29 @@ namespace Multi_Layer_Spoofing_Detector.data
             };
         }
 
-        // THREAT ALERTS
-        public void InsertThreatAlerts(string caseId, List<ThreatAlert> alerts)
-        {
-            using var conn = new SQLiteConnection(_connectionString);
-            conn.Open();
-
-            using var transaction = conn.BeginTransaction();
-            InsertThreatAlerts(caseId, alerts, conn, transaction);
-            transaction.Commit();
-        }
-
         private void InsertThreatAlerts(
             string caseId,
             List<ThreatAlert> alerts,
             SQLiteConnection conn,
-            SQLiteTransaction transaction)
+            SQLiteTransaction tx)
         {
-
-            foreach (var alert in alerts)
+            foreach (var a in alerts)
             {
                 using var cmd = new SQLiteCommand(@"
-                    INSERT INTO ThreatAlerts
-                    (CaseId, Timestamp, Severity, Type, IpAddress, Description, AdditionalInfo)
-                    VALUES
-                    (@caseId, @time, @severity, @type, @ip, @desc, @info);
-                 ", conn, transaction);
+INSERT INTO ThreatAlerts (CaseId, Timestamp, Severity, Type, IpAddress, Description, AdditionalInfo)
+VALUES (@caseId, @time, @severity, @type, @ip, @desc, @info);
+                ", conn, tx);
 
                 cmd.Parameters.AddWithValue("@caseId", caseId);
-                cmd.Parameters.AddWithValue("@time", alert.Timestamp.ToString("yyyy-MM-dd HH:mm:ss"));
-                cmd.Parameters.AddWithValue("@severity", alert.Severity);
-                cmd.Parameters.AddWithValue("@type", alert.Type);
-                cmd.Parameters.AddWithValue("@ip", alert.IpAddress);
-                cmd.Parameters.AddWithValue("@desc", alert.Description);
-                cmd.Parameters.AddWithValue("@info", alert.AdditionalInfo);
+                cmd.Parameters.AddWithValue("@time", a.Timestamp.ToString("yyyy-MM-dd HH:mm:ss"));
+                cmd.Parameters.AddWithValue("@severity", a.Severity ?? "");
+                cmd.Parameters.AddWithValue("@type", a.Type ?? "");
+                cmd.Parameters.AddWithValue("@ip", a.IpAddress ?? "");
+                cmd.Parameters.AddWithValue("@desc", a.Description ?? "");
+                cmd.Parameters.AddWithValue("@info", a.AdditionalInfo ?? "");
 
                 cmd.ExecuteNonQuery();
             }
-        }
-
-        // ANALYSIS RESULTS
-        public void InsertAnalysisResults(string caseId, List<AnalysisResult> results)
-        {
-            using var conn = new SQLiteConnection(_connectionString);
-            conn.Open();
-
-            using var transaction = conn.BeginTransaction();
-            InsertAnalysisResults(caseId, results, conn, transaction);
-            transaction.Commit();
-        }
-
-        private void InsertAnalysisResults(
-            string caseId,
-            List<AnalysisResult> results,
-            SQLiteConnection conn,
-            SQLiteTransaction transaction)
-        {
-            foreach (var r in results)
-            {
-                using var cmd = new SQLiteCommand(@"
-                    INSERT INTO AnalysisResults
-                    (CaseId, Category, RiskLevel, Description, Details, Confidence)
-                    VALUES
-                    (@caseId, @cat, @risk, @desc, @details, @conf);
-                ", conn, transaction);
-
-                cmd.Parameters.AddWithValue("@caseId", caseId);
-                cmd.Parameters.AddWithValue("@cat", r.Category);
-                cmd.Parameters.AddWithValue("@risk", r.RiskLevel);
-                cmd.Parameters.AddWithValue("@desc", r.Description);
-                cmd.Parameters.AddWithValue("@details", r.Details);
-                cmd.Parameters.AddWithValue("@conf", r.Confidence);
-
-                cmd.ExecuteNonQuery();
-            }
-        }
-
-        // HASH / CHAIN OF CUSTODY
-        public void InsertHash(string caseId, string evidenceType, string hashValue)
-        {
-            using var conn = new SQLiteConnection(_connectionString);
-            conn.Open();
-
-            using var transaction = conn.BeginTransaction();
-            InsertHash(caseId, evidenceType, hashValue, conn, transaction);
-            transaction.Commit();
-        }
-
-        private void InsertHash(
-            string caseId,
-            string evidenceType,
-            string hashValue,
-            SQLiteConnection conn,
-            SQLiteTransaction transaction)
-        {
-            using var cmd = new SQLiteCommand(@"
-                INSERT INTO Hashes
-                (CaseId, EvidenceType, HashValue, Algorithm, Timestamp)
-                VALUES
-                (@caseId, @type, @hash, 'SHA-256', @time);
-            ", conn, transaction);
-
-            cmd.Parameters.AddWithValue("@caseId", caseId);
-            cmd.Parameters.AddWithValue("@type", evidenceType);
-            cmd.Parameters.AddWithValue("@hash", hashValue);
-            cmd.Parameters.AddWithValue("@time", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-
-            cmd.ExecuteNonQuery();
         }
 
         public List<ThreatAlert> GetThreatAlerts(string caseId)
@@ -282,10 +179,10 @@ namespace Multi_Layer_Spoofing_Detector.data
             conn.Open();
 
             using var cmd = new SQLiteCommand(@"
-                SELECT Timestamp, Severity, Type, IpAddress, Description, AdditionalInfo
-                FROM ThreatAlerts
-                WHERE CaseId = @caseId
-                ORDER BY Timestamp ASC;
+SELECT Timestamp, Severity, Type, IpAddress, Description, AdditionalInfo
+FROM ThreatAlerts
+WHERE CaseId = @caseId
+ORDER BY Timestamp ASC;
             ", conn);
 
             cmd.Parameters.AddWithValue("@caseId", caseId);
@@ -307,6 +204,30 @@ namespace Multi_Layer_Spoofing_Detector.data
             return alerts;
         }
 
+        private void InsertAnalysisResults(
+            string caseId,
+            List<AnalysisResult> results,
+            SQLiteConnection conn,
+            SQLiteTransaction tx)
+        {
+            foreach (var r in results)
+            {
+                using var cmd = new SQLiteCommand(@"
+INSERT INTO AnalysisResults (CaseId, Category, RiskLevel, Description, Details, Confidence)
+VALUES (@caseId, @cat, @risk, @desc, @details, @conf);
+            ", conn, tx);
+
+                cmd.Parameters.AddWithValue("@caseId", caseId);
+                cmd.Parameters.AddWithValue("@cat", r.Category ?? "");
+                cmd.Parameters.AddWithValue("@risk", r.RiskLevel ?? "");
+                cmd.Parameters.AddWithValue("@desc", r.Description ?? "");
+                cmd.Parameters.AddWithValue("@details", r.Details ?? "");
+                cmd.Parameters.AddWithValue("@conf", r.Confidence);
+
+                cmd.ExecuteNonQuery();
+            }
+        }
+
         public List<AnalysisResult> GetAnalysisResults(string caseId)
         {
             var results = new List<AnalysisResult>();
@@ -315,9 +236,10 @@ namespace Multi_Layer_Spoofing_Detector.data
             conn.Open();
 
             using var cmd = new SQLiteCommand(@"
-                SELECT Category, RiskLevel, Description, Details, Confidence
-                FROM AnalysisResults
-                WHERE CaseId = @caseId;
+SELECT Category, RiskLevel, Description, Details, Confidence
+FROM AnalysisResults
+WHERE CaseId = @caseId
+ORDER BY Id ASC;
             ", conn);
 
             cmd.Parameters.AddWithValue("@caseId", caseId);
@@ -338,18 +260,38 @@ namespace Multi_Layer_Spoofing_Detector.data
             return results;
         }
 
-        public List<(string EvidenceType, string HashValue, string Algorithm, DateTime Timestamp)>
-            GetHashes(string caseId)
-                {
-                    var hashes = new List<(string, string, string, DateTime)>();
+        private void InsertHash(
+            string caseId,
+            string evidenceType,
+            string hashValue,
+            SQLiteConnection conn,
+            SQLiteTransaction tx)
+        {
+            using var cmd = new SQLiteCommand(@"
+INSERT INTO Hashes (CaseId, EvidenceType, HashValue, Algorithm, Timestamp)
+VALUES (@caseId, @type, @hash, 'SHA-256', @time);
+        ", conn, tx);
 
-                    using var conn = new SQLiteConnection(_connectionString);
-                    conn.Open();
+            cmd.Parameters.AddWithValue("@caseId", caseId);
+            cmd.Parameters.AddWithValue("@type", evidenceType);
+            cmd.Parameters.AddWithValue("@hash", hashValue);
+            cmd.Parameters.AddWithValue("@time", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
-                    using var cmd = new SQLiteCommand(@"
-                SELECT EvidenceType, HashValue, Algorithm, Timestamp
-                FROM Hashes
-                WHERE CaseId = @caseId;
+            cmd.ExecuteNonQuery();
+        }
+
+        public List<HashRecord> GetHashes(string caseId)
+        {
+            var hashes = new List<HashRecord>();
+
+            using var conn = new SQLiteConnection(_connectionString);
+            conn.Open();
+
+            using var cmd = new SQLiteCommand(@"
+SELECT EvidenceType, HashValue, Algorithm, Timestamp
+FROM Hashes
+WHERE CaseId = @caseId
+ORDER BY Id ASC;
             ", conn);
 
             cmd.Parameters.AddWithValue("@caseId", caseId);
@@ -357,31 +299,34 @@ namespace Multi_Layer_Spoofing_Detector.data
             using var reader = cmd.ExecuteReader();
             while (reader.Read())
             {
-                hashes.Add((
-                    reader.GetString(0),
-                    reader.GetString(1),
-                    reader.GetString(2),
-                    DateTime.Parse(reader.GetString(3))
-                ));
+                hashes.Add(new HashRecord
+                {
+                    EvidenceType = reader.GetString(0),
+                    HashValue = reader.GetString(1),
+                    Algorithm = reader.GetString(2),
+                    Timestamp = DateTime.Parse(reader.GetString(3))
+                });
             }
 
             return hashes;
         }
-
-
-
     }
 
-    #region forensic_case model
     public class ForensicCase
     {
-        public string CaseId { get; set; }
-        public string PcapFile { get; set; }
-        public string PcapHash { get; set; }
-        public string NetworkStatus { get; set; }
+        public string CaseId { get; set; } = "";
+        public string PcapFile { get; set; } = "";
+        public string PcapHash { get; set; } = "";
+        public string NetworkStatus { get; set; } = "";
         public int PacketsAnalyzed { get; set; }
         public DateTime AnalysisTime { get; set; }
     }
 
-    #endregion
+    public class HashRecord
+    {
+        public string EvidenceType { get; set; } = "";
+        public string HashValue { get; set; } = "";
+        public string Algorithm { get; set; } = "";
+        public DateTime Timestamp { get; set; }
+    }
 }

@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace Multi_Layer_Spoofing_Detector
 {
@@ -201,7 +199,6 @@ namespace Multi_Layer_Spoofing_Detector
                 return lastJson;
             });
         }
-
 
         private MLAnalysisResult ParseAnalysisResult(string json)
         {

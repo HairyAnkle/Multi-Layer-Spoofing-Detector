@@ -264,21 +264,73 @@
 
                     <Border Grid.Column="0" Style="{StaticResource CardStyle}" Margin="8,38,8,8">
                         <StackPanel>
-                            <TextBlock Text="System Status" Style="{StaticResource HeaderTextStyle}"/>
-                            <Border x:Name="NetworkStatusIndicator" Background="{StaticResource SafeBrush}" CornerRadius="12" Padding="24" 
-                                    HorizontalAlignment="Center" Margin="0,12">
+                            <TextBlock Text="System Risk (CVSS + MITRE)" Style="{StaticResource HeaderTextStyle}"/>
+
+                            <Border x:Name="NetworkStatusIndicator"
+                Background="{StaticResource SafeBrush}"
+                CornerRadius="12"
+                Padding="20"
+                HorizontalAlignment="Center"
+                Margin="0,12"
+                MaxWidth="520">
+
                                 <StackPanel HorizontalAlignment="Center">
-                                    <TextBlock x:Name="NetworkStatusIcon" Text="✅" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,8"/>
-                                    <TextBlock x:Name="NetworkStatusText" Text="SECURE" FontSize="24" FontWeight="Bold" 
-                                               Foreground="White" HorizontalAlignment="Center"/>
-                                    <TextBlock x:Name="NetworkStatusDescription" Text="No threats detected" FontSize="14" 
-                                               Foreground="White" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+
+                                    <TextBlock x:Name="NetworkStatusIcon"
+                           Text="✅"
+                           FontSize="48"
+                           HorizontalAlignment="Center"
+                           Margin="0,0,0,8"/>
+
+                                    <TextBlock x:Name="NetworkStatusText"
+                           Text="NONE
+"
+                           FontSize="24"
+                           FontWeight="Bold"
+                           Foreground="White"
+                           HorizontalAlignment="Center"
+                           Margin="0,0,0,6"/>
+
+                                    <Border x:Name="CvssBadge"
+                        Background="#33FFFFFF"
+                        CornerRadius="8"
+                        Padding="10,6"
+                        Margin="0,0,0,10">
+                                        <TextBlock x:Name="CvssScoreText"
+                               Text="CV Score: 0.0"
+                               FontSize="14"
+                               FontWeight="SemiBold"
+                               Foreground="White"
+                               HorizontalAlignment="Center"/>
+                                    </Border>
+
+                                    <ItemsControl x:Name="MitreBullets"
+              HorizontalAlignment="Center"
+              MaxWidth="480">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock TextWrapping="Wrap"
+                                                           Foreground="White"
+                                                           FontSize="13"
+                                                           Margin="0,2,0,2">
+                                                    <Run Text="• "/>
+                                                    <Run Text="{Binding Path=.}"/>
+                                                </TextBlock>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+
                                 </StackPanel>
                             </Border>
-                            <TextBlock x:Name="LastScanText" Text="Last scan: Ready" Style="{StaticResource SubTextStyle}" 
-                                       HorizontalAlignment="Center"/>
+
+                            <TextBlock x:Name="LastScanText"
+                   Text="Last scan: Ready"
+                   Style="{StaticResource SubTextStyle}"
+                   HorizontalAlignment="Center"/>
                         </StackPanel>
                     </Border>
+
+
 
                     <Border Grid.Column="1" Style="{StaticResource CardStyle}" Margin="8,38,8,8">
                         <StackPanel>

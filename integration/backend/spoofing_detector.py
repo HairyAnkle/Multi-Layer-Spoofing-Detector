@@ -106,8 +106,6 @@ class SpoofingDetector:
         except Exception as e:
             self.emit_error(str(e))
 
-
-
     # Model metadata
     def get_model_info(self):
         try:
@@ -165,6 +163,7 @@ def main():
     else:
         detector.emit_error(f"Unknown command: {command}")
 
-
 if __name__ == "__main__":
     main()
+
+
