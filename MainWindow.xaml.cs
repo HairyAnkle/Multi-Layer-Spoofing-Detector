@@ -1,5 +1,8 @@
 ﻿using Microsoft.Win32;
 using Multi_Layer_Spoofing_Detector.data;
+using Multi_Layer_Spoofing_Detector.Models;
+using Multi_Layer_Spoofing_Detector.Risk;
+using Multi_Layer_Spoofing_Detector.Services;
 using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
@@ -10,7 +13,6 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Windows.Threading;
-using static Multi_Layer_Spoofing_Detector.MainWindow;
 
 namespace Multi_Layer_Spoofing_Detector
 {
@@ -35,10 +37,12 @@ namespace Multi_Layer_Spoofing_Detector
         private string JsonReportDirectory =>
             System.IO.Path.Combine(BaseReportDirectory, "json");
 
-
         private string _currentNetworkStatus = "SECURE";
         private DateTime _lastAnalysisTime;
 
+        private double _currentCvssScore = 0.0;
+        private string _currentCvssRating = "NONE";
+        private List<string> _currentMitreTechniques = new();
 
         private MLIntegration? _mlIntegration;
         private bool _isMlIntegrationReady;
@@ -104,45 +108,12 @@ namespace Multi_Layer_Spoofing_Detector
 
                 AnalyzeBtn.IsEnabled = false;
 
-                MessageBox.Show(
-                    ex.Message,
+                DialogService.ShowError(
+                    this,
                     "Environment Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error
+                    ex.Message
                 );
             }
-        }
-
-        #endregion
-
-        #region Data Models
-
-        public class ThreatAlert
-        {
-            public string Type { get; set; }
-            public string Description { get; set; }
-            public DateTime Timestamp { get; set; }
-            public string Severity { get; set; }
-            public string IpAddress { get; set; }
-            public string AdditionalInfo { get; set; }
-        }
-
-        public class AnalysisResult
-        {
-            public string Category { get; set; }
-            public string RiskLevel { get; set; }
-            public string Description { get; set; }
-            public string Details { get; set; }
-            public int Confidence { get; set; }
-        }
-
-        public class Report
-        {
-            public string Name { get; set; }
-            public DateTime Timestamp { get; set; }
-            public string Status { get; set; }
-            public int ThreatsDetected { get; set; }
-            public int PacketsAnalyzed { get; set; }
         }
 
         #endregion
@@ -182,39 +153,46 @@ namespace Multi_Layer_Spoofing_Detector
         private void UpdateNetworkStatus()
         {
             string statusIcon;
-            string statusDescription;
             SolidColorBrush statusColor;
 
             switch (_currentNetworkStatus)
             {
                 case "CRITICAL":
                     statusIcon = "🚨";
-                    statusDescription = "Critical threats detected";
                     statusColor = (SolidColorBrush)FindResource("CriticalBrush");
                     break;
 
-                case "WARNING":
+                case "HIGH":
                     statusIcon = "⚠️";
-                    statusDescription = "Warnings detected";
+                    statusColor = (SolidColorBrush)FindResource("CriticalBrush");
+                    break;
+
+                case "MEDIUM":
+                    statusIcon = "⚠️";
+                    statusColor = (SolidColorBrush)FindResource("WarningBrush");
+                    break;
+
+                case "LOW":
+                    statusIcon = "🟡";
                     statusColor = (SolidColorBrush)FindResource("WarningBrush");
                     break;
 
                 default:
                     statusIcon = "✅";
-                    statusDescription = "No threats detected";
                     statusColor = (SolidColorBrush)FindResource("SafeBrush");
                     break;
             }
 
             NetworkStatusText.Text = _currentNetworkStatus;
             NetworkStatusIcon.Text = statusIcon;
-            NetworkStatusDescription.Text = statusDescription;
             NetworkStatusIndicator.Background = statusColor;
+
+            CvssScoreText.Text = $"CV Score: {_currentCvssScore:0.0}";
+
+            MitreBullets.ItemsSource = _currentMitreTechniques ?? new List<string> { "No findings" };
 
             LastScanText.Text = $"Last scan: {_lastAnalysisTime:HH:mm:ss}";
         }
-
-
 
         #endregion        
 
@@ -239,11 +217,10 @@ namespace Multi_Layer_Spoofing_Detector
 
                 if (extension != ".pcap" && extension != ".pcapng")
                 {
-                    MessageBox.Show(
-                        "Invalid file type selected.\n\nOnly PCAP (.pcap, .pcapng) files are allowed.",
+                    DialogService.ShowWarning(
+                        this,
                         "Invalid File",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning
+                        "Invalid file type selected.\n\nOnly PCAP (.pcap, .pcapng) files are allowed."
                     );
 
                     AnalyzeBtn.IsEnabled = false;
@@ -274,11 +251,10 @@ namespace Multi_Layer_Spoofing_Detector
 
                 AnalyzeBtn.IsEnabled = true;
 
-                MessageBox.Show(
-                    "PCAP file uploaded successfully to File Upload Module.",
+                DialogService.ShowSuccess(
+                    this,
                     "File Upload Module",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information
+                    "PCAP file uploaded successfully to File Upload Module."
                 );
             }
 
@@ -289,11 +265,10 @@ namespace Multi_Layer_Spoofing_Detector
 
                 AnalyzeBtn.IsEnabled = false;
 
-                MessageBox.Show(
-                    $"Error in File Upload Module:\n{ex.Message}",
+                DialogService.ShowError(
+                    this,
                     "Upload Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error
+                    $"Error in File Upload Module:\n{ex.Message}"
                 );
             }
         }
@@ -348,15 +323,12 @@ namespace Multi_Layer_Spoofing_Detector
 
                 ConvertMLResultsToAppFormat(mlResult);
 
+                ComputeRiskAndMitreFromFindings();
+
+                _currentNetworkStatus = _currentCvssRating;
+
                 _currentCaseId = $"SPOOF-{DateTime.Now:yyyyMMdd-HHmmss}";
                 _lastAnalysisTime = DateTime.Now;
-
-                if (_threatAlerts.Any(a => a.Severity == "Critical"))
-                    _currentNetworkStatus = "CRITICAL";
-                else if (_threatAlerts.Any(a => a.Severity == "Warning"))
-                    _currentNetworkStatus = "WARNING";
-                else
-                    _currentNetworkStatus = "SECURE";
 
                 string pcapHash = ComputeSHA256FromFile(_currentPcapFilePath);
 
@@ -402,13 +374,16 @@ namespace Multi_Layer_Spoofing_Detector
 
                 AnalyzeBtn.IsEnabled = true;
 
-                MessageBox.Show($"Multi-Layer Spoofing Detection Complete!\n\n" +
+                DialogService.ShowSuccess(
+                    this,
+                    "Analysis Complete",
+                    $"Multi-Layer Spoofing Detection Complete!\n\n" +
                     $"✓ File Upload Module: Success\n" +
                     $"✓ Packet Analysis Module: {_analysisResults.Count} findings\n" +
                     $"✓ Detection Module: {_threatAlerts.Count} threats identified\n" +
                     $"✓ Results Display Module: Ready\n\n" +
-                    $"Results are now available in the Results Display Module.",
-                    "Analysis Complete", MessageBoxButton.OK, MessageBoxImage.Information);
+                    $"Results are now available in the Results Display Module."
+                );
             }
             catch (Exception ex)
             {
@@ -418,8 +393,11 @@ namespace Multi_Layer_Spoofing_Detector
                 AnalysisModuleStatus.Text = "✗ Analysis failed";
                 AnalysisModuleStatus.Foreground = (SolidColorBrush)FindResource("CriticalBrush");
 
-                MessageBox.Show($"Error during analysis: {ex.Message}", "Analysis Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                DialogService.ShowError(
+                    this,
+                    "Analysis Error",
+                    $"Error during analysis: {ex.Message}"
+                );
             }
         }
 
@@ -552,11 +530,10 @@ namespace Multi_Layer_Spoofing_Detector
             {
                 if (string.IsNullOrEmpty(_currentCaseId))
                 {
-                    MessageBox.Show(
-                        "No analysis case available.\n\nPlease analyze a PCAP first.",
+                    DialogService.ShowWarning(
+                        this,
                         "No Case Available",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning
+                        "No analysis case available.\n\nPlease analyze a PCAP first."
                     );
                     return;
                 }
@@ -568,14 +545,13 @@ namespace Multi_Layer_Spoofing_Detector
 
                 GenerateForensicReportHTML(fullPath);
 
-                var result = MessageBox.Show(
-                    $"Forensic HTML report generated successfully!\n\nLocation:\n{fullPath}\n\nOpen now?",
+                var shouldOpen = DialogService.ShowConfirm(
+                    this,
                     "Report Generated",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Information
+                    $"Forensic HTML report generated successfully!\n\nLocation:\n{fullPath}\n\nOpen now?"
                 );
 
-                if (result == MessageBoxResult.Yes)
+                if (shouldOpen)
                 {
                     Process.Start(new ProcessStartInfo
                     {
@@ -586,15 +562,13 @@ namespace Multi_Layer_Spoofing_Detector
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
-                    $"Error generating HTML report:\n{ex.Message}",
+                DialogService.ShowError(
+                    this,
                     "Export Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error
+                    $"Error generating HTML report:\n{ex.Message}"
                 );
             }
         }
-
 
         private void GenerateJsonReportBtn_Click(object sender, RoutedEventArgs e)
         {
@@ -602,11 +576,10 @@ namespace Multi_Layer_Spoofing_Detector
             {
                 if (string.IsNullOrEmpty(_currentCaseId))
                 {
-                    MessageBox.Show(
-                        "No analysis case available.\n\nPlease analyze a PCAP first.",
+                    DialogService.ShowWarning(
+                        this,
                         "No Case Available",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning
+                        "No analysis case available.\n\nPlease analyze a PCAP first."
                     );
                     return;
                 }
@@ -618,24 +591,21 @@ namespace Multi_Layer_Spoofing_Detector
 
                 GenerateForensicReportJSON(fullPath);
 
-                MessageBox.Show(
-                    $"Forensic JSON report generated successfully!\n\nLocation:\n{fullPath}",
+                DialogService.ShowSuccess(
+                    this,
                     "Report Generated",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information
+                    $"Forensic JSON report generated successfully!\n\nLocation:\n{fullPath}"
                 );
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
-                    $"Error generating JSON report:\n{ex.Message}",
+                DialogService.ShowError(
+                    this,
                     "Export Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error
+                    $"Error generating JSON report:\n{ex.Message}"
                 );
             }
         }
-
 
         #endregion
 
@@ -764,7 +734,6 @@ namespace Multi_Layer_Spoofing_Detector
                 }
             }
         }
-
         private Border CreateAnalysisResultUI(AnalysisResult result)
         {
             string backgroundColor = result.RiskLevel switch
@@ -834,6 +803,8 @@ namespace Multi_Layer_Spoofing_Detector
             var caseMeta = _repo.GetCaseMetadata(_currentCaseId);
             var hashes = _repo.GetHashes(_currentCaseId);
 
+            var risk = RiskCalculator.ComputeReportRisk(analysisResults);
+
             var reportDate = DateTime.Now;
             var investigator = Environment.UserName;
 
@@ -843,22 +814,35 @@ namespace Multi_Layer_Spoofing_Detector
             int avgConfidence = analysisResults.Any()
                 ? (int)Math.Round(analysisResults.Average(r => r.Confidence))
                 : 0;
-
-            string networkStatusClass =
-                caseMeta.NetworkStatus == "CRITICAL" ? "severity-critical" :
-                caseMeta.NetworkStatus == "WARNING" ? "severity-warning" :
-                                                       "severity-safe";
+            string riskClass = risk.Rating.ToLowerInvariant(); 
 
             string threatRows = threatAlerts.Any()
                 ? string.Join("", threatAlerts.Select(alert => $@"
 <tr>
     <td>{alert.Timestamp:yyyy-MM-dd HH:mm:ss}</td>
-    <td><span class='severity-badge severity-{alert.Severity.ToLower()}'>{alert.Severity}</span></td>
-    <td>{alert.Type}</td>
-    <td>{alert.IpAddress}</td>
-    <td>{alert.Description}<br/><small>{alert.AdditionalInfo}</small></td>
+    <td><span class='badge sev-{HtmlSafe(alert.Severity.ToLower())}'>{HtmlSafe(alert.Severity)}</span></td>
+    <td>{HtmlSafe(alert.Type)}</td>
+    <td>{HtmlSafe(alert.IpAddress)}</td>
+    <td>{HtmlSafe(alert.Description)}<br/><small>{HtmlSafe(alert.AdditionalInfo)}</small></td>
 </tr>"))
                 : "<tr><td colspan='5'>No threat alerts detected.</td></tr>";
+
+            string hashSection = hashes.Any()
+                ? "<table class='table'>" +
+                  "<thead><tr><th>Evidence</th><th>Algorithm</th><th>Hash</th><th>Timestamp</th></tr></thead><tbody>" +
+                  string.Join("", hashes.Select(h => $@"
+<tr>
+    <td>{HtmlSafe(h.EvidenceType)}</td>
+    <td>{HtmlSafe(h.Algorithm)}</td>
+    <td class='mono'>{HtmlSafe(h.HashValue)}</td>
+    <td>{h.Timestamp:yyyy-MM-dd HH:mm:ss}</td>
+</tr>")) +
+                  "</tbody></table>"
+                : "<p>No hash records found.</p>";
+
+            string mitreBullets = risk.MitreItems.Any()
+                ? "<ul>" + string.Join("", risk.MitreItems.Select(x => $"<li>{HtmlSafe(x)}</li>")) + "</ul>"
+                : "<p>No mapped techniques.</p>";
 
             string html = $@"<!DOCTYPE html>
 <html>
@@ -869,19 +853,35 @@ namespace Multi_Layer_Spoofing_Detector
 body {{ font-family: Segoe UI; background:#f5f5f5; padding:20px; }}
 .container {{ background:white; padding:40px; max-width:1200px; margin:auto; }}
 .header {{ border-bottom:4px solid #00C9A7; margin-bottom:30px; }}
-.card {{ padding:20px; border-left:4px solid #00C9A7; background:#f8f9fa; }}
+
+.cards {{ display:grid; grid-template-columns:repeat(4,1fr); gap:15px; }}
+.card {{ padding:20px; border-left:4px solid #00C9A7; background:#f8f9fa; border-radius:10px; }}
 .card.critical {{ border-color:#FF4757; }}
 .card.warning {{ border-color:#FFA502; }}
 .card.safe {{ border-color:#26DE81; }}
-.threat-table {{ width:100%; border-collapse:collapse; }}
-.threat-table th {{ background:#1E1E2E; color:white; padding:10px; }}
-.threat-table td {{ padding:10px; border-bottom:1px solid #ddd; }}
-.severity-badge {{ padding:4px 10px; color:white; border-radius:10px; font-size:12px; }}
-.severity-critical {{ background:#FF4757; }}
-.severity-warning {{ background:#FFA502; }}
-.severity-safe {{ background:#26DE81; }}
+
+.badge {{ padding:4px 10px; color:white; border-radius:10px; font-size:12px; display:inline-block; }}
+.sev-critical {{ background:#FF4757; }}
+.sev-warning  {{ background:#FFA502; }}
+.sev-safe     {{ background:#26DE81; }}
+
+.cvss-critical {{ background:#FF4757; }}
+.cvss-high     {{ background:#FF6B6B; }}
+.cvss-medium   {{ background:#FFA502; }}
+.cvss-low      {{ background:#26DE81; }}
+.cvss-none     {{ background:#2ECC71; }}
+
+.table {{ width:100%; border-collapse:collapse; margin-top:10px; }}
+.table th {{ background:#1E1E2E; color:white; padding:10px; text-align:left; }}
+.table td {{ padding:10px; border-bottom:1px solid #ddd; vertical-align:top; }}
+
+.riskbox {{ margin-top:18px; padding:16px; background:#f8f9fa; border-radius:12px; border-left:6px solid #00C9A7; }}
+.riskTitle {{ font-size:20px; font-weight:700; margin:0; }}
+.riskScore {{ font-size:16px; margin-top:8px; }}
+.scoreBadge {{ font-weight:700; padding:4px 10px; border-radius:10px; color:white; }}
+.mono {{ font-family: Consolas; font-size:12px; word-break:break-all; }}
+
 .footer {{ margin-top:40px; text-align:center; color:#666; font-size:13px; }}
-.hash {{ font-family: Consolas; font-size:12px; color:#999; word-break:break-all; }}
 </style>
 </head>
 <body>
@@ -893,30 +893,48 @@ body {{ font-family: Segoe UI; background:#f5f5f5; padding:20px; }}
 </div>
 
 <table>
-<tr><td><b>Case Number:</b></td><td>{caseMeta.CaseId}</td></tr>
-<tr><td><b>Investigator:</b></td><td>{investigator}</td></tr>
+<tr><td><b>Case Number:</b></td><td>{HtmlSafe(caseMeta.CaseId)}</td></tr>
+<tr><td><b>Investigator:</b></td><td>{HtmlSafe(investigator)}</td></tr>
 <tr><td><b>Report Generated:</b></td><td>{reportDate:yyyy-MM-dd HH:mm:ss}</td></tr>
-<tr><td><b>Network Status:</b></td>
-<td><span class='severity-badge {networkStatusClass}'>{caseMeta.NetworkStatus}</span></td></tr>
+<tr><td><b>PCAP File:</b></td><td>{HtmlSafe(caseMeta.PcapFile)}</td></tr>
 </table>
 
+<div class='riskbox'>
+  <p class='riskTitle'>System Risk (CVSS + MITRE)</p>
+  <div class='riskScore'>
+    <span class='badge cvss-{riskClass}'>{HtmlSafe(risk.Rating)}</span>
+    &nbsp;
+    <span class='scoreBadge cvss-{riskClass}'>Score: {risk.Score:0.0}</span>
+  </div>
+  <div style='margin-top:10px;'>
+    <b>Summary</b>
+    <ul>
+      {string.Join("", risk.SummaryBullets.Select(b => $"<li>{HtmlSafe(b)}</li>"))}
+    </ul>
+  </div>
+  <div style='margin-top:10px;'>
+    <b>MITRE ATT&CK (mapped techniques)</b>
+    {mitreBullets}
+  </div>
+</div>
+
 <h2>Executive Summary</h2>
-<div style='display:grid;grid-template-columns:repeat(4,1fr);gap:15px;'>
-<div class='card critical'><b>Critical</b><br/>{criticalCount}</div>
-<div class='card warning'><b>Warning</b><br/>{warningCount}</div>
-<div class='card'><b>Flows</b><br/>{totalPackets:N0}</div>
-<div class='card safe'><b>Confidence</b><br/>{avgConfidence}%</div>
+<div class='cards'>
+  <div class='card critical'><b>Critical</b><br/>{criticalCount}</div>
+  <div class='card warning'><b>Warning</b><br/>{warningCount}</div>
+  <div class='card'><b>Flows</b><br/>{totalPackets:N0}</div>
+  <div class='card safe'><b>Confidence</b><br/>{avgConfidence}%</div>
 </div>
 
 <h2>Detected Threat Alerts</h2>
-<table class='threat-table'>
+<table class='table'>
 <thead>
 <tr>
-<th>Timestamp</th>
-<th>Severity</th>
-<th>Type</th>
-<th>Source IP</th>
-<th>Description</th>
+  <th>Timestamp</th>
+  <th>Severity</th>
+  <th>Type</th>
+  <th>Source IP</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
@@ -924,37 +942,21 @@ body {{ font-family: Segoe UI; background:#f5f5f5; padding:20px; }}
 </tbody>
 </table>
 
+<h2>Chain of Custody (Hashes)</h2>
+{hashSection}
+
 <div class='footer'>
-<p><strong>AI-Based Multi-Layer Spoofing Detection System</strong></p>
-<p>Report ID: {caseMeta.CaseId}</p>
-<p class='hash'>Chain of Custody:<br/>__HASH_SECTION__</p>
+  <p><strong>AI-Based Multi-Layer Spoofing Detection System</strong></p>
+  <p>Report ID: {HtmlSafe(caseMeta.CaseId)}</p>
+  <p>Generated: {reportDate:yyyy-MM-dd HH:mm:ss}</p>
 </div>
 
 </div>
 </body>
 </html>";
 
-            string hashSection = hashes.Any()
-    ? "<table class='threat-table'>" +
-      "<thead><tr>" +
-      "<th>Evidence</th><th>Algorithm</th><th>Hash</th><th>Timestamp</th>" +
-      "</tr></thead><tbody>" +
-      string.Join("", hashes.Select(h => $@"
-        <tr>
-            <td>{h.EvidenceType}</td>
-            <td>{h.Algorithm}</td>
-            <td style='font-family:Consolas;font-size:12px'>{h.HashValue}</td>
-            <td>{h.Timestamp:yyyy-MM-dd HH:mm:ss}</td>
-        </tr>
-      ")) +
-      "</tbody></table>"
-    : "<p>No hash records found.</p>";
-            html = html.Replace("__HASH_SECTION__", hashSection);
-
-
             File.WriteAllText(filePath, html);
         }
-
 
         private void GenerateForensicReportJSON(string filePath)
         {
@@ -966,6 +968,8 @@ body {{ font-family: Segoe UI; background:#f5f5f5; padding:20px; }}
             var caseMeta = _repo.GetCaseMetadata(_currentCaseId);
             var hashes = _repo.GetHashes(_currentCaseId);
 
+            var risk = RiskCalculator.ComputeReportRisk(analysisResults);
+
             var reportBody = new
             {
                 ForensicReport = new
@@ -973,11 +977,20 @@ body {{ font-family: Segoe UI; background:#f5f5f5; padding:20px; }}
                     Metadata = new
                     {
                         caseMeta.CaseId,
+                        caseMeta.PcapFile,
                         Investigator = Environment.UserName,
                         Organization = "AI-Based Spoofing Detection System",
-                        caseMeta.NetworkStatus,
-                        caseMeta.PacketsAnalyzed,
-                        caseMeta.PcapHash
+                        ReportGenerated = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                        PacketsAnalyzed = caseMeta.PacketsAnalyzed,
+                        PcapHash = caseMeta.PcapHash
+                    },
+
+                    SystemRisk = new
+                    {
+                        CvssScore = risk.Score,
+                        CvssRating = risk.Rating,
+                        Summary = risk.SummaryBullets,
+                        MitreAttack = risk.MitreItems
                     },
 
                     ExecutiveSummary = new
@@ -998,7 +1011,7 @@ body {{ font-family: Segoe UI; background:#f5f5f5; padding:20px; }}
                         a.IpAddress,
                         a.Description,
                         a.AdditionalInfo
-                    }),
+                    }).ToList(),
 
                     AnalysisResults = analysisResults.Select(r => new
                     {
@@ -1007,7 +1020,15 @@ body {{ font-family: Segoe UI; background:#f5f5f5; padding:20px; }}
                         r.Description,
                         r.Details,
                         r.Confidence
-                    })
+                    }).ToList(),
+
+                    ChainOfCustody = hashes.Select(h => new
+                    {
+                        h.EvidenceType,
+                        h.Algorithm,
+                        h.HashValue,
+                        Timestamp = h.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")
+                    }).ToList()
                 }
             };
 
@@ -1016,14 +1037,14 @@ body {{ font-family: Segoe UI; background:#f5f5f5; padding:20px; }}
                 WriteIndented = true
             });
 
-            string hash = ComputeSHA256(jsonBody);
+            string reportHash = ComputeSHA256(jsonBody);
 
             var finalJson = new
             {
                 ReportHash = new
                 {
                     Algorithm = "SHA-256",
-                    Value = hash
+                    Value = reportHash
                 },
                 Report = reportBody
             };
@@ -1073,6 +1094,20 @@ body {{ font-family: Segoe UI; background:#f5f5f5; padding:20px; }}
             Directory.CreateDirectory(JsonReportDirectory);
         }
 
+        private void ComputeRiskAndMitreFromFindings()
+        {
+            var risk = RiskCalculator.ComputeUiRisk(_analysisResults);
+            _currentCvssScore = risk.Score;
+            _currentCvssRating = risk.Rating;
+            _currentMitreTechniques = risk.MitreTechniques;
+        }
+
+        private static string HtmlSafe(string? s)
+        {
+            if (string.IsNullOrEmpty(s)) return "";
+            return System.Net.WebUtility.HtmlEncode(s);
+        }
+
         #endregion
 
         #region Window Control Events
@@ -1112,10 +1147,13 @@ body {{ font-family: Segoe UI; background:#f5f5f5; padding:20px; }}
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
-            var result = MessageBox.Show("Are you sure you want to exit the application?",
-                "Confirm Exit", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            var shouldClose = DialogService.ShowConfirm(
+                this,
+                "Confirm Exit",
+                "Are you sure you want to exit the application?"
+            );
 
-            if (result == MessageBoxResult.Yes)
+            if (shouldClose)
             {
                 this.Close();
             }
