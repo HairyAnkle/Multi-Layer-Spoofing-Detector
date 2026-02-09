@@ -88,7 +88,6 @@ namespace Multi_Layer_Spoofing_Detector
                 if (string.IsNullOrWhiteSpace(e.Data)) return;
                 stdout.AppendLine(e.Data);
 
-                // surface progress lines
                 if (e.Data.Contains("Working on"))
                     progress?.Report($"CICFlowMeter: {e.Data}");
                 else if (e.Data.Contains("Completed"))
