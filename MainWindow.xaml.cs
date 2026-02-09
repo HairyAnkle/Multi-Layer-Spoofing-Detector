@@ -187,7 +187,7 @@ namespace Multi_Layer_Spoofing_Detector
             NetworkStatusIcon.Text = "";
             NetworkStatusIndicator.Background = statusColor;
 
-            CvssScoreText.Text = $"CV Score: {_currentCvssScore:0.0}";
+            CvssScoreText.Text = $"{_currentCvssScore:0.0}";
 
             MitreBullets.ItemsSource = _currentMitreTechniques ?? new List<string> { "No findings" };
 

@@ -275,38 +275,37 @@
                 MaxWidth="520">
 
                                 <StackPanel HorizontalAlignment="Center">
-
                                     <TextBlock x:Name="NetworkStatusIcon"
-                           Text="✅"
-                           FontSize="48"
-                           HorizontalAlignment="Center"
-                           Margin="0,0,0,8"/>
-
+                                               Visibility="Collapsed"/>
                                     <TextBlock x:Name="NetworkStatusText"
-                           Text="NONE
-"
-                           FontSize="24"
-                           FontWeight="Bold"
-                           Foreground="White"
-                           HorizontalAlignment="Center"
-                           Margin="0,0,0,6"/>
+                                               Visibility="Collapsed"/>
+                                    <TextBlock Text="CV Score"
+                                               Foreground="#E2E2F5"
+                                               FontSize="14"
+                                               HorizontalAlignment="Center"/>
 
                                     <Border x:Name="CvssBadge"
-                        Background="#33FFFFFF"
-                        CornerRadius="8"
-                        Padding="10,6"
-                        Margin="0,0,0,10">
+                                            Background="#33FFFFFF"
+                                            CornerRadius="12"
+                                            Padding="18,10"
+                                            Margin="0,6,0,12">
                                         <TextBlock x:Name="CvssScoreText"
-                               Text="CV Score: 0.0"
-                               FontSize="14"
-                               FontWeight="SemiBold"
-                               Foreground="White"
-                               HorizontalAlignment="Center"/>
+                                                   Text="0.0"
+                                                   FontSize="32"
+                                                   FontWeight="Bold"
+                                                   Foreground="White"
+                                                   HorizontalAlignment="Center"/>
                                     </Border>
 
+                                    <TextBlock Text="Detected techniques"
+                                               Foreground="#E2E2F5"
+                                               FontSize="13"
+                                               HorizontalAlignment="Center"
+                                               Margin="0,0,0,6"/>
+
                                     <ItemsControl x:Name="MitreBullets"
-              HorizontalAlignment="Center"
-              MaxWidth="480">
+                                                  HorizontalAlignment="Center"
+                                                  MaxWidth="480">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
                                                 <TextBlock TextWrapping="Wrap"
