@@ -282,6 +282,7 @@
                                     <TextBlock Text="CV Score"
                                                Foreground="#E2E2F5"
                                                FontSize="14"
+                                               FontWeight="Bold"
                                                HorizontalAlignment="Center"/>
 
                                     <Border x:Name="CvssBadge"
@@ -300,6 +301,7 @@
                                     <TextBlock Text="Detected techniques"
                                                Foreground="#E2E2F5"
                                                FontSize="13"
+                                               FontWeight="Bold"
                                                HorizontalAlignment="Center"
                                                Margin="0,0,0,6"/>
 
