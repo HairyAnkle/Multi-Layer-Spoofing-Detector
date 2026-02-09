@@ -2,6 +2,7 @@
 using Multi_Layer_Spoofing_Detector.data;
 using Multi_Layer_Spoofing_Detector.Models;
 using Multi_Layer_Spoofing_Detector.Risk;
+using Multi_Layer_Spoofing_Detector.Services;
 using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
@@ -107,11 +108,10 @@ namespace Multi_Layer_Spoofing_Detector
 
                 AnalyzeBtn.IsEnabled = false;
 
-                MessageBox.Show(
-                    ex.Message,
+                DialogService.ShowError(
+                    this,
                     "Environment Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error
+                    ex.Message
                 );
             }
         }
@@ -217,11 +217,10 @@ namespace Multi_Layer_Spoofing_Detector
 
                 if (extension != ".pcap" && extension != ".pcapng")
                 {
-                    MessageBox.Show(
-                        "Invalid file type selected.\n\nOnly PCAP (.pcap, .pcapng) files are allowed.",
+                    DialogService.ShowWarning(
+                        this,
                         "Invalid File",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning
+                        "Invalid file type selected.\n\nOnly PCAP (.pcap, .pcapng) files are allowed."
                     );
 
                     AnalyzeBtn.IsEnabled = false;
@@ -252,11 +251,10 @@ namespace Multi_Layer_Spoofing_Detector
 
                 AnalyzeBtn.IsEnabled = true;
 
-                MessageBox.Show(
-                    "PCAP file uploaded successfully to File Upload Module.",
+                DialogService.ShowSuccess(
+                    this,
                     "File Upload Module",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information
+                    "PCAP file uploaded successfully to File Upload Module."
                 );
             }
 
@@ -267,11 +265,10 @@ namespace Multi_Layer_Spoofing_Detector
 
                 AnalyzeBtn.IsEnabled = false;
 
-                MessageBox.Show(
-                    $"Error in File Upload Module:\n{ex.Message}",
+                DialogService.ShowError(
+                    this,
                     "Upload Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error
+                    $"Error in File Upload Module:\n{ex.Message}"
                 );
             }
         }
@@ -377,13 +374,16 @@ namespace Multi_Layer_Spoofing_Detector
 
                 AnalyzeBtn.IsEnabled = true;
 
-                MessageBox.Show($"Multi-Layer Spoofing Detection Complete!\n\n" +
+                DialogService.ShowSuccess(
+                    this,
+                    "Analysis Complete",
+                    $"Multi-Layer Spoofing Detection Complete!\n\n" +
                     $"✓ File Upload Module: Success\n" +
                     $"✓ Packet Analysis Module: {_analysisResults.Count} findings\n" +
                     $"✓ Detection Module: {_threatAlerts.Count} threats identified\n" +
                     $"✓ Results Display Module: Ready\n\n" +
-                    $"Results are now available in the Results Display Module.",
-                    "Analysis Complete", MessageBoxButton.OK, MessageBoxImage.Information);
+                    $"Results are now available in the Results Display Module."
+                );
             }
             catch (Exception ex)
             {
@@ -393,8 +393,11 @@ namespace Multi_Layer_Spoofing_Detector
                 AnalysisModuleStatus.Text = "✗ Analysis failed";
                 AnalysisModuleStatus.Foreground = (SolidColorBrush)FindResource("CriticalBrush");
 
-                MessageBox.Show($"Error during analysis: {ex.Message}", "Analysis Error",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                DialogService.ShowError(
+                    this,
+                    "Analysis Error",
+                    $"Error during analysis: {ex.Message}"
+                );
             }
         }
 
@@ -527,11 +530,10 @@ namespace Multi_Layer_Spoofing_Detector
             {
                 if (string.IsNullOrEmpty(_currentCaseId))
                 {
-                    MessageBox.Show(
-                        "No analysis case available.\n\nPlease analyze a PCAP first.",
+                    DialogService.ShowWarning(
+                        this,
                         "No Case Available",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning
+                        "No analysis case available.\n\nPlease analyze a PCAP first."
                     );
                     return;
                 }
@@ -543,14 +545,13 @@ namespace Multi_Layer_Spoofing_Detector
 
                 GenerateForensicReportHTML(fullPath);
 
-                var result = MessageBox.Show(
-                    $"Forensic HTML report generated successfully!\n\nLocation:\n{fullPath}\n\nOpen now?",
+                var shouldOpen = DialogService.ShowConfirm(
+                    this,
                     "Report Generated",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Information
+                    $"Forensic HTML report generated successfully!\n\nLocation:\n{fullPath}\n\nOpen now?"
                 );
 
-                if (result == MessageBoxResult.Yes)
+                if (shouldOpen)
                 {
                     Process.Start(new ProcessStartInfo
                     {
@@ -561,11 +562,10 @@ namespace Multi_Layer_Spoofing_Detector
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
-                    $"Error generating HTML report:\n{ex.Message}",
+                DialogService.ShowError(
+                    this,
                     "Export Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error
+                    $"Error generating HTML report:\n{ex.Message}"
                 );
             }
         }
@@ -576,11 +576,10 @@ namespace Multi_Layer_Spoofing_Detector
             {
                 if (string.IsNullOrEmpty(_currentCaseId))
                 {
-                    MessageBox.Show(
-                        "No analysis case available.\n\nPlease analyze a PCAP first.",
+                    DialogService.ShowWarning(
+                        this,
                         "No Case Available",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning
+                        "No analysis case available.\n\nPlease analyze a PCAP first."
                     );
                     return;
                 }
@@ -592,20 +591,18 @@ namespace Multi_Layer_Spoofing_Detector
 
                 GenerateForensicReportJSON(fullPath);
 
-                MessageBox.Show(
-                    $"Forensic JSON report generated successfully!\n\nLocation:\n{fullPath}",
+                DialogService.ShowSuccess(
+                    this,
                     "Report Generated",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information
+                    $"Forensic JSON report generated successfully!\n\nLocation:\n{fullPath}"
                 );
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
-                    $"Error generating JSON report:\n{ex.Message}",
+                DialogService.ShowError(
+                    this,
                     "Export Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error
+                    $"Error generating JSON report:\n{ex.Message}"
                 );
             }
         }
@@ -1150,10 +1147,13 @@ body {{ font-family: Segoe UI; background:#f5f5f5; padding:20px; }}
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
-            var result = MessageBox.Show("Are you sure you want to exit the application?",
-                "Confirm Exit", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            var shouldClose = DialogService.ShowConfirm(
+                this,
+                "Confirm Exit",
+                "Are you sure you want to exit the application?"
+            );
 
-            if (result == MessageBoxResult.Yes)
+            if (shouldClose)
             {
                 this.Close();
             }
