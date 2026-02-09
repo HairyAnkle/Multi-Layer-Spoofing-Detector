@@ -6,6 +6,19 @@ This project is a WPF application designed to detect and prevent spoofing attack
 
 ## [INSTALLER - Official](https://drive.google.com/drive/folders/1faWgoDnEAQzrcwdAbxfdRPabWV3slHvr?usp=sharing)
 
+To run this:
+1. Install the setup MLSD.exe
+2. Open in terminal then type:
+```
+cd dist-images
+docker load -i .\cicflowmeter.tar
+docker load -i .\multi-layer-spoof-detector.tar
+```
+3. Then, run the .exe
+
+
+---
+
 ## Prerequisites
 
 Before setting up the project, ensure you have the following installed:
