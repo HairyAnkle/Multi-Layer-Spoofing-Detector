@@ -282,6 +282,7 @@
                                     <TextBlock Text="CV Score"
                                                Foreground="#E2E2F5"
                                                FontSize="14"
+                                               FontWeight="Bold"
                                                HorizontalAlignment="Center"/>
 
                                     <Border x:Name="CvssBadge"
@@ -300,6 +301,7 @@
                                     <TextBlock Text="Detected techniques"
                                                Foreground="#E2E2F5"
                                                FontSize="13"
+                                               FontWeight="Bold"
                                                HorizontalAlignment="Center"
                                                Margin="0,0,0,6"/>
 
@@ -333,7 +335,7 @@
 
                     <Border Grid.Column="1" Style="{StaticResource CardStyle}" Margin="8,38,8,8">
                         <StackPanel>
-                            <TextBlock Text="📁 File Upload Module" Style="{StaticResource HeaderTextStyle}"/>
+                            <TextBlock Text="📁 File Upload" Style="{StaticResource HeaderTextStyle}"/>
                             <TextBlock Text="Upload saved PCAP files for processing and analysis" 
                                        Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,12"/>
 
@@ -366,7 +368,7 @@
 
                             <Border Background="#2A3A4A" CornerRadius="8" Padding="12" Margin="0,12,0,0">
                                 <StackPanel>
-                                    <TextBlock Text="Module Status:" Style="{StaticResource SubTextStyle}" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Status:" Style="{StaticResource SubTextStyle}" FontWeight="SemiBold"/>
                                     <TextBlock x:Name="UploadModuleStatus" Text="✓ Ready to accept PCAP files" 
                                                Style="{StaticResource RegularTextStyle}" Foreground="{StaticResource SafeBrush}"/>
                                 </StackPanel>
@@ -383,7 +385,7 @@
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Grid.Column="0" Margin="0,0,8,0">
-                            <TextBlock Text="🔬 Packet Analysis Module" Style="{StaticResource HeaderTextStyle}"/>
+                            <TextBlock Text="🔬 Packet Analysis" Style="{StaticResource HeaderTextStyle}"/>
                             <TextBlock Text="Parse packets and extract features using Python (Scapy)" 
                                        Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,12"/>
 
@@ -393,7 +395,7 @@
 
                             <Border Background="#2A3A4A" CornerRadius="8" Padding="12">
                                 <StackPanel>
-                                    <TextBlock Text="Module Status:" Style="{StaticResource SubTextStyle}" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Status:" Style="{StaticResource SubTextStyle}" FontWeight="SemiBold"/>
                                     <TextBlock x:Name="AnalysisModuleStatus" Text="⏸ Waiting for PCAP file" 
                                                Style="{StaticResource RegularTextStyle}" Foreground="{StaticResource WarningBrush}"/>
                                     <TextBlock x:Name="AnalysisModuleDetails" Text="Upload a file to begin" 
@@ -403,7 +405,7 @@
                         </StackPanel>
 
                         <StackPanel Grid.Column="1" Margin="8,0,0,0">
-                            <TextBlock Text="🤖 Detection Module" Style="{StaticResource HeaderTextStyle}"/>
+                            <TextBlock Text="🤖 Detection" Style="{StaticResource HeaderTextStyle}"/>
                             <TextBlock Text="Execute trained AI model to detect IP, ARP, and DNS spoofing" 
                                        Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,12"/>
 
@@ -486,7 +488,7 @@
 
                     <Border Grid.Column="0" Style="{StaticResource CardStyle}">
                         <StackPanel>
-                            <TextBlock Text="📊 Results Display Module" Style="{StaticResource HeaderTextStyle}"/>
+                            <TextBlock Text="📊 Results Display" Style="{StaticResource HeaderTextStyle}"/>
                             <TextBlock Text="Detection outputs with threat indicators and logs" 
                                        Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,8"/>
 
@@ -561,7 +563,7 @@
 
                     <Border Grid.Column="1" Style="{StaticResource CardStyle}">
                         <StackPanel>
-                            <TextBlock Text="📄 Report Generation Module" Style="{StaticResource HeaderTextStyle}"/>
+                            <TextBlock Text="📄 Report Generation" Style="{StaticResource HeaderTextStyle}"/>
                             <TextBlock Text="Documentation and preservation of detection results" 
                                        Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,12"/>
 
@@ -600,7 +602,7 @@
 
                             <Border Background="#2A3A4A" CornerRadius="8" Padding="12" Margin="0,12,0,0">
                                 <StackPanel>
-                                    <TextBlock Text="Module Status:" Style="{StaticResource SubTextStyle}" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Status:" Style="{StaticResource SubTextStyle}" FontWeight="SemiBold"/>
                                     <TextBlock x:Name="ReportModuleStatus" Text="✓ Ready to generate reports" 
                                                Style="{StaticResource RegularTextStyle}" Foreground="{StaticResource SafeBrush}"/>
                                 </StackPanel>
