@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
-using static Multi_Layer_Spoofing_Detector.MainWindow;
+using Multi_Layer_Spoofing_Detector.Models;
 
 namespace Multi_Layer_Spoofing_Detector.data
 {
@@ -12,7 +12,10 @@ namespace Multi_Layer_Spoofing_Detector.data
 
         public ForensicsRepository()
         {
-            string dbDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "database");
+            string dbDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "MLSD",
+                "database");
             Directory.CreateDirectory(dbDir);
 
             string dbPath = Path.Combine(dbDir, "forensics.db");
@@ -312,21 +315,4 @@ ORDER BY Id ASC;
         }
     }
 
-    public class ForensicCase
-    {
-        public string CaseId { get; set; } = "";
-        public string PcapFile { get; set; } = "";
-        public string PcapHash { get; set; } = "";
-        public string NetworkStatus { get; set; } = "";
-        public int PacketsAnalyzed { get; set; }
-        public DateTime AnalysisTime { get; set; }
-    }
-
-    public class HashRecord
-    {
-        public string EvidenceType { get; set; } = "";
-        public string HashValue { get; set; } = "";
-        public string Algorithm { get; set; } = "";
-        public DateTime Timestamp { get; set; }
-    }
 }
