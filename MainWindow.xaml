@@ -542,7 +542,7 @@
                                 </TabControl.Resources>
 
                                 <TabItem Header="🔴 ARP Spoofing">
-                                    <ScrollViewer Height="340" VerticalScrollBarVisibility="Auto">
+                                    <ScrollViewer Height="800" VerticalScrollBarVisibility="Auto">
                                         <StackPanel x:Name="ArpResultsPanel" Margin="8">
                                             <TextBlock Text="No analysis results yet. Upload a PCAP file and run analysis." 
                                                        Style="{StaticResource SubTextStyle}" TextAlignment="Center" Margin="20"/>
@@ -551,7 +551,7 @@
                                 </TabItem>
 
                                 <TabItem Header="🟡 DNS Spoofing">
-                                    <ScrollViewer Height="340" VerticalScrollBarVisibility="Auto">
+                                    <ScrollViewer Height="800" VerticalScrollBarVisibility="Auto">
                                         <StackPanel x:Name="DnsResultsPanel" Margin="8">
                                             <TextBlock Text="No analysis results yet. Upload a PCAP file and run analysis." 
                                                        Style="{StaticResource SubTextStyle}" TextAlignment="Center" Margin="20"/>
@@ -560,7 +560,7 @@
                                 </TabItem>
 
                                 <TabItem Header="🟢 IP Spoofing">
-                                    <ScrollViewer Height="340" VerticalScrollBarVisibility="Auto">
+                                    <ScrollViewer Height="800" VerticalScrollBarVisibility="Auto">
                                         <StackPanel x:Name="IpResultsPanel" Margin="8">
                                             <TextBlock Text="No analysis results yet. Upload a PCAP file and run analysis." 
                                                        Style="{StaticResource SubTextStyle}" TextAlignment="Center" Margin="20"/>
@@ -569,7 +569,7 @@
                                 </TabItem>
 
                                 <TabItem Header="📋 Threat Logs">
-                                    <ScrollViewer Height="340" VerticalScrollBarVisibility="Auto">
+                                    <ScrollViewer Height="800" VerticalScrollBarVisibility="Auto">
                                         <StackPanel x:Name="AlertsPanel" Margin="8">
                                             <TextBlock Text="No threat alerts. System is secure." 
                                                        Style="{StaticResource SubTextStyle}" TextAlignment="Center" Margin="20"/>

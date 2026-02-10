@@ -120,7 +120,7 @@ namespace Multi_Layer_Spoofing_Detector
             statuses.Add($"CICFlowMeter Image ({_settings.CicFlowMeterImage}): {(cicImage ? "PASS" : "FAIL")}");
             if (!cicImage) return (false, string.Join("\n", statuses) + $"\n{dockerError}");
 
-            string dbDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MLSD", "database");
+            string dbDir = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MLSD", "database");
             Directory.CreateDirectory(dbDir);
             statuses.Add("Database Path Writable: PASS");
 
@@ -711,20 +711,20 @@ namespace Multi_Layer_Spoofing_Detector
                 EnsureReportDirectories();
 
                 string stamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-                string htmlPath = Path.Combine(HtmlReportDirectory, $"ForensicReport_{stamp}.html");
-                string jsonPath = Path.Combine(JsonReportDirectory, $"ForensicReport_{stamp}.json");
+                string htmlPath = System.IO.Path.Combine(HtmlReportDirectory, $"ForensicReport_{stamp}.html");
+                string jsonPath = System.IO.Path.Combine(JsonReportDirectory, $"ForensicReport_{stamp}.json");
 
                 GenerateForensicReportHTML(htmlPath);
                 GenerateForensicReportJSON(jsonPath);
 
-                string bundleDir = Path.Combine(BaseReportDirectory, "bundle");
+                string bundleDir = System.IO.Path.Combine(BaseReportDirectory, "bundle");
                 Directory.CreateDirectory(bundleDir);
-                string zipPath = Path.Combine(bundleDir, $"EvidenceBundle_{_currentCaseId}_{stamp}.zip");
+                string zipPath = System.IO.Path.Combine(bundleDir, $"EvidenceBundle_{_currentCaseId}_{stamp}.zip");
 
                 if (File.Exists(zipPath)) File.Delete(zipPath);
                 using var archive = ZipFile.Open(zipPath, ZipArchiveMode.Create);
-                archive.CreateEntryFromFile(htmlPath, Path.GetFileName(htmlPath));
-                archive.CreateEntryFromFile(jsonPath, Path.GetFileName(jsonPath));
+                archive.CreateEntryFromFile(htmlPath, System.IO.Path.GetFileName(htmlPath));
+                archive.CreateEntryFromFile(jsonPath, System.IO.Path.GetFileName(jsonPath));
 
                 DialogService.ShowSuccess(this, "Evidence Bundle", $"Evidence bundle exported successfully.\n\nLocation:\n{zipPath}");
                 AppLogger.Info($"Evidence bundle exported: {zipPath}");
@@ -748,7 +748,7 @@ namespace Multi_Layer_Spoofing_Detector
 
         private void OpenLogsFolderBtn_Click(object sender, RoutedEventArgs e)
         {
-            string logDir = Path.Combine(
+            string logDir = System.IO.Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 "MLSD",
                 "logs");
