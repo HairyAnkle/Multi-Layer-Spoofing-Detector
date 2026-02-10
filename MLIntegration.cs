@@ -10,8 +10,16 @@ namespace Multi_Layer_Spoofing_Detector
 
     public class MLIntegration
     {
-        private const int ANALYSIS_TIMEOUT_MS = 900_000; 
-        private const string DOCKER_IMAGE = "multi-layer-spoof-detector";
+        private readonly int _analysisTimeoutMs;
+        private readonly string _dockerImage;
+        private readonly string _cicFlowMeterImage;
+
+        public MLIntegration(string dockerImage, string cicFlowMeterImage, int analysisTimeoutMs)
+        {
+            _dockerImage = dockerImage;
+            _cicFlowMeterImage = cicFlowMeterImage;
+            _analysisTimeoutMs = analysisTimeoutMs;
+        }
 
         public async Task<MLAnalysisResult> AnalyzePcapAsync(
             string pcapFilePath,
@@ -71,7 +79,7 @@ namespace Multi_Layer_Spoofing_Detector
                     "run --rm " +
                     $"--mount type=bind,source=\"{inputDir}\",target=/pcap/input " +
                     $"--mount type=bind,source=\"{outputDir}\",target=/pcap/output " +
-                    "cicflowmeter /pcap/input /pcap/output",
+                    $"{_cicFlowMeterImage} /pcap/input /pcap/output",
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -104,11 +112,11 @@ namespace Multi_Layer_Spoofing_Detector
             process.BeginOutputReadLine();
             process.BeginErrorReadLine();
 
-            var completed = await Task.WhenAny(process.WaitForExitAsync(), Task.Delay(ANALYSIS_TIMEOUT_MS));
+            var completed = await Task.WhenAny(process.WaitForExitAsync(), Task.Delay(_analysisTimeoutMs));
             if (completed is not Task && !process.HasExited)
             {
                 try { process.Kill(true); } catch { }
-                throw new TimeoutException($"CICFlowMeter exceeded timeout of {ANALYSIS_TIMEOUT_MS / 1000} seconds.");
+                throw new TimeoutException($"CICFlowMeter exceeded timeout of {_analysisTimeoutMs / 1000} seconds.");
             }
 
             if (process.ExitCode != 0)
@@ -150,7 +158,7 @@ namespace Multi_Layer_Spoofing_Detector
                 psi.ArgumentList.Add("--rm");
                 psi.ArgumentList.Add("-v");
                 psi.ArgumentList.Add($"{csvDir}:/data");
-                psi.ArgumentList.Add(DOCKER_IMAGE);
+                psi.ArgumentList.Add(_dockerImage);
                 psi.ArgumentList.Add("analyze");
                 psi.ArgumentList.Add($"/data/{csvFile}");
 
@@ -178,10 +186,10 @@ namespace Multi_Layer_Spoofing_Detector
                 process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
 
-                if (!process.WaitForExit(ANALYSIS_TIMEOUT_MS))
+                if (!process.WaitForExit(_analysisTimeoutMs))
                 {
                     try { process.Kill(true); } catch { }
-                    throw new TimeoutException($"ML container exceeded timeout of {ANALYSIS_TIMEOUT_MS / 1000} seconds.");
+                    throw new TimeoutException($"ML container exceeded timeout of {_analysisTimeoutMs / 1000} seconds.");
                 }
 
                 if (process.ExitCode != 0)

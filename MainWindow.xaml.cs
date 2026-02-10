@@ -5,6 +5,7 @@ using Multi_Layer_Spoofing_Detector.Risk;
 using Multi_Layer_Spoofing_Detector.Services;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -29,7 +30,7 @@ namespace Multi_Layer_Spoofing_Detector
         private string? _currentCaseId;
 
         private string BaseReportDirectory =>
-            System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "reports");
+            System.IO.Path.Combine(_settings.DataRootDirectory, "reports");
 
         private string HtmlReportDirectory =>
             System.IO.Path.Combine(BaseReportDirectory, "html");
@@ -46,10 +47,13 @@ namespace Multi_Layer_Spoofing_Detector
 
         private MLIntegration? _mlIntegration;
         private bool _isMlIntegrationReady;
+        private readonly AppRuntimeSettings _settings;
 
         public MainWindow()
         {
             InitializeComponent();
+            _settings = AppSettingsService.Load();
+            AutoRunCheckBox.IsChecked = _settings.AutoRunAfterUpload;
             InitializeTimers();
             InitializeMLIntegration();
             UpdateDateTime();
@@ -60,44 +64,21 @@ namespace Multi_Layer_Spoofing_Detector
         {
             try
             {
-                if (!DockerChecker.IsDockerInstalled(out string dockerError))
-                {
-                    throw new Exception(
-                        "Docker is not installed.\n\nPlease install Docker Desktop."
-                    );
-                }
+                var preflight = RunPreflightCheck();
+                if (!preflight.Ok)
+                    throw new Exception(preflight.Message);
 
-                if (!DockerChecker.IsDockerRunning(out dockerError))
-                {
-                    throw new Exception(
-                        "Docker is installed but not running.\n\nPlease start Docker Desktop."
-                    );
-                }
-
-                if (!DockerChecker.IsDockerImageAvailable("multi-layer-spoof-detector", out dockerError))
-                {
-                    throw new Exception(
-                        "Spoof Detector Docker image not found.\n\n" +
-                        "Run the following command inside the integration folder:\n\n" +
-                        "docker build -t multi-layer-spoof-detector ."
-                    );
-                }
-
-                if (!DockerChecker.IsCICFlowMeterImageAvailable(out dockerError))
-                {
-                    throw new Exception(
-                        "CICFlowMeter Docker image not found.\n\n" +
-                        "Please build or pull the CICFlowMeter image:\n\n" +
-                        "docker build -t cicflowmeter ."
-                    );
-                }
-
-                _mlIntegration = new MLIntegration();
+                _mlIntegration = new MLIntegration(
+                    _settings.MlDockerImage,
+                    _settings.CicFlowMeterImage,
+                    _settings.AnalysisTimeoutMs);
                 _isMlIntegrationReady = true;
 
                 AnalysisModuleDetails.Text = "✓ Docker ML Engine ready";
                 AnalysisModuleDetails.Foreground =
                     (SolidColorBrush)FindResource("SafeBrush");
+                OperationalStatusText.Text = preflight.Message;
+                AppLogger.Info("Environment preflight passed.");
             }
             catch (Exception ex)
             {
@@ -107,6 +88,8 @@ namespace Multi_Layer_Spoofing_Detector
                     (SolidColorBrush)FindResource("CriticalBrush");
 
                 AnalyzeBtn.IsEnabled = false;
+                OperationalStatusText.Text = ex.Message;
+                AppLogger.Error($"Environment preflight failed: {ex.Message}");
 
                 DialogService.ShowError(
                     this,
@@ -114,6 +97,33 @@ namespace Multi_Layer_Spoofing_Detector
                     ex.Message
                 );
             }
+        }
+
+        private (bool Ok, string Message) RunPreflightCheck()
+        {
+            var statuses = new List<string>();
+
+            bool dockerInstalled = DockerChecker.IsDockerInstalled(out var dockerError);
+            statuses.Add($"Docker Installed: {(dockerInstalled ? "PASS" : "FAIL")}");
+            if (!dockerInstalled) return (false, string.Join("\n", statuses) + $"\n{dockerError}");
+
+            bool dockerRunning = DockerChecker.IsDockerRunning(out dockerError);
+            statuses.Add($"Docker Running: {(dockerRunning ? "PASS" : "FAIL")}");
+            if (!dockerRunning) return (false, string.Join("\n", statuses) + $"\n{dockerError}");
+
+            bool mlImage = DockerChecker.IsDockerImageAvailable(_settings.MlDockerImage, out dockerError);
+            statuses.Add($"ML Image ({_settings.MlDockerImage}): {(mlImage ? "PASS" : "FAIL")}");
+            if (!mlImage) return (false, string.Join("\n", statuses) + $"\n{dockerError}");
+
+            bool cicImage = DockerChecker.IsDockerImageAvailable(_settings.CicFlowMeterImage, out dockerError);
+            statuses.Add($"CICFlowMeter Image ({_settings.CicFlowMeterImage}): {(cicImage ? "PASS" : "FAIL")}");
+            if (!cicImage) return (false, string.Join("\n", statuses) + $"\n{dockerError}");
+
+            string dbDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MLSD", "database");
+            Directory.CreateDirectory(dbDir);
+            statuses.Add("Database Path Writable: PASS");
+
+            return (true, string.Join("\n", statuses));
         }
 
         #endregion
@@ -256,6 +266,13 @@ namespace Multi_Layer_Spoofing_Detector
                     "File Upload",
                     "PCAP file uploaded successfully to File Upload."
                 );
+
+                AppLogger.Info($"PCAP uploaded: {_currentPcapFilePath}");
+
+                if (_settings.AutoRunAfterUpload)
+                {
+                    AnalyzeBtn_Click(this, new RoutedEventArgs());
+                }
             }
 
             catch (Exception ex)
@@ -280,6 +297,7 @@ namespace Multi_Layer_Spoofing_Detector
             {
                 AnalyzeBtn.IsEnabled = false;
                 LoadingOverlay.Visibility = Visibility.Visible;
+                AppLogger.Info($"Analysis started for file: {_currentPcapFilePath}");
 
                 LoadingProgressText.Text = "CICFlowMeter - Extracting flows...";
                 await Task.Delay(500);
@@ -374,6 +392,8 @@ namespace Multi_Layer_Spoofing_Detector
 
                 AnalyzeBtn.IsEnabled = true;
 
+                AppLogger.Info($"Analysis completed. Findings: {_analysisResults.Count}, Alerts: {_threatAlerts.Count}");
+
                 DialogService.ShowSuccess(
                     this,
                     "Analysis Complete",
@@ -392,6 +412,8 @@ namespace Multi_Layer_Spoofing_Detector
 
                 AnalysisModuleStatus.Text = "✗ Analysis failed";
                 AnalysisModuleStatus.Foreground = (SolidColorBrush)FindResource("CriticalBrush");
+
+                AppLogger.Error($"Analysis failed: {ex.Message}");
 
                 DialogService.ShowError(
                     this,
@@ -551,6 +573,8 @@ namespace Multi_Layer_Spoofing_Detector
                     $"Forensic HTML report generated successfully!\n\nLocation:\n{fullPath}\n\nOpen now?"
                 );
 
+                AppLogger.Info($"HTML report generated: {fullPath}");
+
                 if (shouldOpen)
                 {
                     Process.Start(new ProcessStartInfo
@@ -591,6 +615,8 @@ namespace Multi_Layer_Spoofing_Detector
 
                 GenerateForensicReportJSON(fullPath);
 
+                AppLogger.Info($"JSON report generated: {fullPath}");
+
                 DialogService.ShowSuccess(
                     this,
                     "Report Generated",
@@ -604,6 +630,76 @@ namespace Multi_Layer_Spoofing_Detector
                     "Export Error",
                     $"Error generating JSON report:\n{ex.Message}"
                 );
+            }
+        }
+
+        private void RunPreflightCheckBtn_Click(object sender, RoutedEventArgs e)
+        {
+            var preflight = RunPreflightCheck();
+            OperationalStatusText.Text = preflight.Message;
+
+            if (preflight.Ok)
+            {
+                _mlIntegration = new MLIntegration(
+                    _settings.MlDockerImage,
+                    _settings.CicFlowMeterImage,
+                    _settings.AnalysisTimeoutMs);
+                _isMlIntegrationReady = true;
+                AnalyzeBtn.IsEnabled = true;
+                DialogService.ShowSuccess(this, "Preflight Check", "Environment is ready.");
+                AppLogger.Info("Manual preflight check passed.");
+            }
+            else
+            {
+                _isMlIntegrationReady = false;
+                AnalyzeBtn.IsEnabled = false;
+                DialogService.ShowWarning(this, "Preflight Check", preflight.Message);
+                AppLogger.Error($"Manual preflight check failed: {preflight.Message}");
+            }
+        }
+
+        private void AutoRunCheckBox_Changed(object sender, RoutedEventArgs e)
+        {
+            _settings.AutoRunAfterUpload = AutoRunCheckBox.IsChecked == true;
+            AppSettingsService.Save(_settings);
+            AppLogger.Info($"AutoRunAfterUpload changed to: {_settings.AutoRunAfterUpload}");
+        }
+
+        private void ExportEvidenceBundleBtn_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(_currentCaseId))
+                {
+                    DialogService.ShowWarning(this, "No Case Available", "Analyze a PCAP first before exporting evidence bundle.");
+                    return;
+                }
+
+                EnsureReportDirectories();
+
+                string stamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                string htmlPath = Path.Combine(HtmlReportDirectory, $"ForensicReport_{stamp}.html");
+                string jsonPath = Path.Combine(JsonReportDirectory, $"ForensicReport_{stamp}.json");
+
+                GenerateForensicReportHTML(htmlPath);
+                GenerateForensicReportJSON(jsonPath);
+
+                string bundleDir = Path.Combine(BaseReportDirectory, "bundle");
+                Directory.CreateDirectory(bundleDir);
+                string zipPath = Path.Combine(bundleDir, $"EvidenceBundle_{_currentCaseId}_{stamp}.zip");
+
+                if (File.Exists(zipPath)) File.Delete(zipPath);
+                using var archive = ZipFile.Open(zipPath, ZipArchiveMode.Create);
+                archive.CreateEntryFromFile(htmlPath, Path.GetFileName(htmlPath));
+                archive.CreateEntryFromFile(jsonPath, Path.GetFileName(jsonPath));
+
+                DialogService.ShowSuccess(this, "Evidence Bundle", $"Evidence bundle exported successfully.\n\nLocation:\n{zipPath}");
+                AppLogger.Info($"Evidence bundle exported: {zipPath}");
+            }
+            catch (Exception ex)
+            {
+                DialogService.ShowError(this, "Export Error", $"Error creating evidence bundle:\n{ex.Message}");
+                AppLogger.Error($"Evidence bundle export failed: {ex.Message}");
             }
         }
 
@@ -1155,6 +1251,7 @@ body {{ font-family: Segoe UI; background:#f5f5f5; padding:20px; }}
 
             if (shouldClose)
             {
+                AppLogger.Info("Application closing by user confirmation.");
                 this.Close();
             }
         }

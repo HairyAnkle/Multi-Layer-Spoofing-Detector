@@ -139,6 +139,31 @@ You should see both images listed.
 Start the **Multi-Layer Spoofing Detector** from the Start menu or desktop
 shortcut created by the installer.
 
+---
+
+## 🛠️ Enterprise Runtime Features
+
+This build includes practical operations-focused features:
+
+- **Preflight Check** button in the UI to validate Docker runtime and image readiness.
+- **Operational Status** panel that shows current environment check results.
+- **Auto-run after upload** toggle (saved in runtime settings).
+- **Evidence Bundle Export** (`.zip`) that packages generated HTML and JSON reports.
+- **Runtime settings file**: `%LOCALAPPDATA%\MLSD\appsettings.runtime.json`
+- **Application logs**: `%LOCALAPPDATA%\MLSD\logs\app.log`
+
+### Runtime settings example
+
+```json
+{
+  "MlDockerImage": "multi-layer-spoof-detector",
+  "CicFlowMeterImage": "cicflowmeter",
+  "AnalysisTimeoutMs": 900000,
+  "DataRootDirectory": "C:\\Users\\<user>\\AppData\\Local\\MLSD",
+  "AutoRunAfterUpload": false
+}
+```
+
 ### Verify Docker Installation
 ```powershell
 docker --version

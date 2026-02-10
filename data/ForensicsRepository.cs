@@ -12,7 +12,10 @@ namespace Multi_Layer_Spoofing_Detector.data
 
         public ForensicsRepository()
         {
-            string dbDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "database");
+            string dbDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "MLSD",
+                "database");
             Directory.CreateDirectory(dbDir);
 
             string dbPath = Path.Combine(dbDir, "forensics.db");

@@ -328,6 +328,26 @@
                    Text="Last scan: Ready"
                    Style="{StaticResource SubTextStyle}"
                    HorizontalAlignment="Center"/>
+
+                            <Border Background="#333344" CornerRadius="8" Padding="10" Margin="0,10,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="Operational Status" Style="{StaticResource SubTextStyle}" FontWeight="SemiBold"/>
+                                    <TextBlock x:Name="OperationalStatusText"
+                                               Text="Environment checks not run yet."
+                                               Style="{StaticResource SubTextStyle}"
+                                               TextWrapping="Wrap"/>
+                                    <Button Content="Run Preflight Check"
+                                            Style="{StaticResource SecondaryButtonStyle}"
+                                            Click="RunPreflightCheckBtn_Click"
+                                            Margin="0,8,0,0"/>
+                                    <CheckBox x:Name="AutoRunCheckBox"
+                                              Content="Auto-run analysis after upload"
+                                              Foreground="White"
+                                              Margin="2,8,0,0"
+                                              Checked="AutoRunCheckBox_Changed"
+                                              Unchecked="AutoRunCheckBox_Changed"/>
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
                     </Border>
 
@@ -599,6 +619,8 @@
                                     HorizontalAlignment="Stretch" Click="GenerateHtmlReportBtn_Click" Margin="0,4"/>
                             <Button Content="📋 Generate JSON Report" Style="{StaticResource SecondaryButtonStyle}" 
                                     HorizontalAlignment="Stretch" Click="GenerateJsonReportBtn_Click" Margin="0,4"/>
+                            <Button Content="🧾 Export Evidence Bundle (.zip)" Style="{StaticResource SecondaryButtonStyle}"
+                                    HorizontalAlignment="Stretch" Click="ExportEvidenceBundleBtn_Click" Margin="0,4"/>
 
                             <Border Background="#2A3A4A" CornerRadius="8" Padding="12" Margin="0,12,0,0">
                                 <StackPanel>
