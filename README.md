@@ -51,7 +51,7 @@ The system follows a **Three-Tier Architecture**:
 ```
 Multi-Layer-Spoofing-Detector/
 │
-├── integration/
+├── integration/  (optional for deployment; used to build images)
 │   ├── backend/
 │   │   ├── spoofing_detector.py
 │   │   ├── cic_preprocessor.py
@@ -87,6 +87,89 @@ Multi-Layer-Spoofing-Detector/
 - .NET SDK 6 or later
 - PowerShell
 - Python 3.13 (for debugging only)
+
+> **Deployment note:** If you already have the Docker images built and available,
+> the `integration/` sources are **not required** at runtime.
+> The app calls Docker by image name, so you only need the images and the WPF app.
+
+---
+
+## 🚢 Deployment Notes (Prebuilt Docker Images)
+
+If you distribute **prebuilt Docker images** (for example via a registry or
+preloading on target machines), you can ship a **deployment branch** with only:
+
+- The WPF app (`MainWindow.xaml`, `MainWindow.xaml.cs`, etc.)
+- `data/` (SQLite schema)
+- `reports/` output folders (optional)
+
+You may omit `integration/` entirely on the deployment branch, as it is only
+needed to build images from source. The runtime still requires **Docker Desktop**
+and the images named `multi-layer-spoof-detector` and `cicflowmeter`.
+
+---
+
+## 🧩 Setup Installer Guide (Prebuilt Images in /dist-images)
+
+If you ship a **setup installer** that includes this app and a folder named
+`dist-images/` with prebuilt Docker images, use the steps below after install.
+
+### 1) Start Docker Desktop
+- Open **Docker Desktop** from the Start menu.
+- Wait until the status shows **“Docker is running.”**
+
+### 2) Load the prebuilt images from `dist-images/`
+Open **PowerShell** in the install directory and run:
+
+```powershell
+docker load -i dist-images\multi-layer-spoof-detector.tar
+docker load -i dist-images\cicflowmeter.tar
+```
+
+> If your image files have different names, substitute them in the commands above.
+
+### 3) Verify images are loaded
+```powershell
+docker images | findstr "multi-layer-spoof-detector cicflowmeter"
+```
+
+You should see both images listed.
+
+### 4) Launch the application
+Start the **Multi-Layer Spoofing Detector** from the Start menu or desktop
+shortcut created by the installer.
+
+---
+
+## 🛠️ Enterprise Runtime Features
+
+This build includes practical operations-focused features:
+
+- **Preflight Check** button in the UI to validate Docker runtime and image readiness.
+- **Operational Status** panel that shows current environment check results.
+- **Auto-run after upload** toggle (saved in runtime settings).
+- **Evidence Bundle Export** (`.zip`) that packages generated HTML and JSON reports.
+- **Explainability section** for each alert that shows why it was triggered.
+- **False-positive controls** via runtime confidence thresholds.
+- **Large PCAP guard** to prevent unstable runs on oversized files.
+- **Runtime settings file**: `%LOCALAPPDATA%\MLSD\appsettings.runtime.json`
+- **Application logs**: `%LOCALAPPDATA%\MLSD\logs\app.log`
+
+### Runtime settings example
+
+```json
+{
+  "MlDockerImage": "multi-layer-spoof-detector",
+  "CicFlowMeterImage": "cicflowmeter",
+  "AnalysisTimeoutMs": 900000,
+  "MaxPcapSizeMb": 500,
+  "MinAlertConfidence": 60,
+  "HighConfidenceThreshold": 85,
+  "MediumConfidenceThreshold": 60,
+  "DataRootDirectory": "C:\\Users\\<user>\\AppData\\Local\\MLSD",
+  "AutoRunAfterUpload": false
+}
+```
 
 ### Verify Docker Installation
 ```powershell
