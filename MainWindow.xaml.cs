@@ -56,6 +56,7 @@ namespace Multi_Layer_Spoofing_Detector
             AutoRunCheckBox.IsChecked = _settings.AutoRunAfterUpload;
             InitializeTimers();
             InitializeMLIntegration();
+            LoadRecentCases();
             UpdateDateTime();
         }
 
@@ -245,6 +246,23 @@ namespace Multi_Layer_Spoofing_Detector
                 _currentPcapFilePath = selectedPath;
                 FileInfo fileInfo = new FileInfo(_currentPcapFilePath);
 
+                long maxBytes = (long)_settings.MaxPcapSizeMb * 1024 * 1024;
+                if (_settings.MaxPcapSizeMb > 0 && fileInfo.Length > maxBytes)
+                {
+                    DialogService.ShowWarning(
+                        this,
+                        "Large PCAP File",
+                        $"Selected file is {FormatFileSize(fileInfo.Length)}.\n\n" +
+                        $"Configured max file size is {_settings.MaxPcapSizeMb} MB to avoid UI stalls and timeout issues."
+                    );
+
+                    AnalyzeBtn.IsEnabled = false;
+                    FileInfoPanel.Visibility = Visibility.Collapsed;
+                    UploadModuleStatus.Text = "✗ File exceeds configured size limit";
+                    UploadModuleStatus.Foreground = (SolidColorBrush)FindResource("CriticalBrush");
+                    return;
+                }
+
                 FileInfoPanel.Visibility = Visibility.Visible;
                 FileNameText.Text = System.IO.Path.GetFileName(_currentPcapFilePath);
                 FileSizeText.Text = FormatFileSize(fileInfo.Length);
@@ -430,10 +448,15 @@ namespace Multi_Layer_Spoofing_Detector
 
             foreach (var threat in mlResult.Arp_Spoofing)
             {
+                if (threat.Confidence < _settings.MinAlertConfidence)
+                {
+                    continue;
+                }
+
                 var result = new AnalysisResult
                 {
                     Category = "ARP",
-                    RiskLevel = threat.Confidence >= 85 ? "High" : (threat.Confidence >= 60 ? "Medium" : "Low"),
+                    RiskLevel = threat.Confidence >= _settings.HighConfidenceThreshold ? "High" : (threat.Confidence >= _settings.MediumConfidenceThreshold ? "Medium" : "Low"),
                     Description = "ARP Spoofing Detected by ML Model",
                     Details = threat.Details,
                     Confidence = (int)threat.Confidence
@@ -447,17 +470,22 @@ namespace Multi_Layer_Spoofing_Detector
                     Timestamp = DateTime.Now,
                     Severity = result.RiskLevel == "High" ? "Critical" : "Warning",
                     IpAddress = threat.Src_Ip ?? "Unknown",
-                    AdditionalInfo = $"{threat.Details} | Confidence: {threat.Confidence:F2}%"
+                    AdditionalInfo = $"Confidence={threat.Confidence:F2}% | Rule: confidence >= {_settings.MinAlertConfidence}%"
                 };
                 _threatAlerts.Add(alert);
             }
 
             foreach (var threat in mlResult.Dns_Spoofing)
             {
+                if (threat.Confidence < _settings.MinAlertConfidence)
+                {
+                    continue;
+                }
+
                 var result = new AnalysisResult
                 {
                     Category = "DNS",
-                    RiskLevel = threat.Confidence >= 85 ? "High" : (threat.Confidence >= 60 ? "Medium" : "Low"),
+                    RiskLevel = threat.Confidence >= _settings.HighConfidenceThreshold ? "High" : (threat.Confidence >= _settings.MediumConfidenceThreshold ? "Medium" : "Low"),
                     Description = "DNS Spoofing Detected by ML Model",
                     Details = threat.Details,
                     Confidence = (int)threat.Confidence
@@ -471,17 +499,22 @@ namespace Multi_Layer_Spoofing_Detector
                     Timestamp = DateTime.Now,
                     Severity = result.RiskLevel == "High" ? "Critical" : "Warning",
                     IpAddress = threat.Src_Ip ?? "Unknown",
-                    AdditionalInfo = $"{threat.Details} | Confidence: {threat.Confidence:F2}%"
+                    AdditionalInfo = $"Confidence={threat.Confidence:F2}% | Rule: confidence >= {_settings.MinAlertConfidence}%"
                 };
                 _threatAlerts.Add(alert);
             }
 
             foreach (var threat in mlResult.Ip_Spoofing)
             {
+                if (threat.Confidence < _settings.MinAlertConfidence)
+                {
+                    continue;
+                }
+
                 var result = new AnalysisResult
                 {
                     Category = "IP",
-                    RiskLevel = threat.Confidence >= 85 ? "High" : (threat.Confidence >= 60 ? "Medium" : "Low"),
+                    RiskLevel = threat.Confidence >= _settings.HighConfidenceThreshold ? "High" : (threat.Confidence >= _settings.MediumConfidenceThreshold ? "Medium" : "Low"),
                     Description = "IP Spoofing Detected by ML Model",
                     Details = threat.Details,
                     Confidence = (int)threat.Confidence
@@ -495,7 +528,7 @@ namespace Multi_Layer_Spoofing_Detector
                     Timestamp = DateTime.Now,
                     Severity = result.RiskLevel == "High" ? "Critical" : "Warning",
                     IpAddress = threat.Src_Ip ?? "Unknown",
-                    AdditionalInfo = $"{threat.Details} | Confidence: {threat.Confidence:F2}%"
+                    AdditionalInfo = $"Confidence={threat.Confidence:F2}% | Rule: confidence >= {_settings.MinAlertConfidence}%"
                 };
                 _threatAlerts.Add(alert);
             }
@@ -518,7 +551,7 @@ namespace Multi_Layer_Spoofing_Detector
                     Timestamp = DateTime.Now,
                     Severity = "Safe",
                     IpAddress = "System",
-                    AdditionalInfo = $"Total packets analyzed: {mlResult.Total_Packets}"
+                    AdditionalInfo = $"Total packets analyzed: {mlResult.Total_Packets} | No alert met threshold ({_settings.MinAlertConfidence}%)"
                 });
             }
 
@@ -703,6 +736,55 @@ namespace Multi_Layer_Spoofing_Detector
             }
         }
 
+        private void OpenReportsFolderBtn_Click(object sender, RoutedEventArgs e)
+        {
+            EnsureReportDirectories();
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = BaseReportDirectory,
+                UseShellExecute = true
+            });
+        }
+
+        private void OpenLogsFolderBtn_Click(object sender, RoutedEventArgs e)
+        {
+            string logDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "MLSD",
+                "logs");
+            Directory.CreateDirectory(logDir);
+
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = logDir,
+                UseShellExecute = true
+            });
+        }
+
+        private void RefreshRecentCasesBtn_Click(object sender, RoutedEventArgs e)
+        {
+            LoadRecentCases();
+        }
+
+        private void LoadRecentCases()
+        {
+            try
+            {
+                var recentCases = _repo.GetRecentCases(8);
+                RecentCasesList.ItemsSource = recentCases
+                    .Select(c => $"{c.AnalysisTime:yyyy-MM-dd HH:mm:ss} | {c.CaseId} | {c.PcapFile} | {c.NetworkStatus}")
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Error($"Failed to load recent cases: {ex.Message}");
+                RecentCasesList.ItemsSource = new List<string>
+                {
+                    "Unable to load recent cases."
+                };
+            }
+        }
+
         #endregion
 
         #region UI Update Methods
@@ -779,15 +861,26 @@ namespace Multi_Layer_Spoofing_Detector
                 Text = alert.Description,
                 Style = (Style)FindResource("SubTextStyle")
             };
-            var infoText = new TextBlock
-            {
-                Text = alert.AdditionalInfo,
-                Style = (Style)FindResource("SubTextStyle")
-            };
-
             contentPanel.Children.Add(titleText);
             contentPanel.Children.Add(descText);
-            contentPanel.Children.Add(infoText);
+
+            var explainability = new Expander
+            {
+                Header = "Explainability",
+                Margin = new Thickness(0, 4, 0, 0),
+                Foreground = (SolidColorBrush)FindResource("TextBrush")
+            };
+
+            var explainabilityText = new TextBlock
+            {
+                Text = alert.AdditionalInfo,
+                Style = (Style)FindResource("SubTextStyle"),
+                TextWrapping = TextWrapping.Wrap,
+                Margin = new Thickness(0, 4, 0, 0)
+            };
+
+            explainability.Content = explainabilityText;
+            contentPanel.Children.Add(explainability);
             Grid.SetColumn(contentPanel, 1);
 
             var timeText = new TextBlock
@@ -848,6 +941,15 @@ namespace Multi_Layer_Spoofing_Detector
                 _ => "⚪"
             };
 
+            double cvScore = result.RiskLevel switch
+            {
+                "High" => 9.3,
+                "Medium" => 6.5,
+                "Low" => 3.1,
+                _ => 0.0
+            };
+            cvScore = Math.Round(cvScore * Math.Clamp(result.Confidence / 100.0, 0.0, 1.0), 1);
+
             var border = new Border
             {
                 Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(backgroundColor)),
@@ -860,7 +962,7 @@ namespace Multi_Layer_Spoofing_Detector
 
             var titleText = new TextBlock
             {
-                Text = $"{riskIcon} {result.RiskLevel} Risk - {result.Description}",
+                Text = $"{riskIcon} CV Score {cvScore:0.0} - {result.Description}",
                 Style = (Style)FindResource("RegularTextStyle"),
                 FontWeight = FontWeights.Bold
             };
@@ -873,7 +975,7 @@ namespace Multi_Layer_Spoofing_Detector
 
             var confidenceText = new TextBlock
             {
-                Text = $"Confidence: {result.Confidence}%",
+                Text = $"Model confidence: {result.Confidence}%",
                 Style = (Style)FindResource("SubTextStyle")
             };
 

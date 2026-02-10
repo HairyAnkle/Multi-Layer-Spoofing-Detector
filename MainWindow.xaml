@@ -282,7 +282,6 @@
                                     <TextBlock Text="CV Score"
                                                Foreground="#E2E2F5"
                                                FontSize="14"
-                                               FontWeight="Bold"
                                                HorizontalAlignment="Center"/>
 
                                     <Border x:Name="CvssBadge"
@@ -621,6 +620,32 @@
                                     HorizontalAlignment="Stretch" Click="GenerateJsonReportBtn_Click" Margin="0,4"/>
                             <Button Content="🧾 Export Evidence Bundle (.zip)" Style="{StaticResource SecondaryButtonStyle}"
                                     HorizontalAlignment="Stretch" Click="ExportEvidenceBundleBtn_Click" Margin="0,4"/>
+
+                            <Border Background="#2A3A4A" CornerRadius="8" Padding="12" Margin="0,12,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="Quick Actions" Style="{StaticResource SubTextStyle}" FontWeight="SemiBold"/>
+                                    <Button Content="🩺 Run Preflight Check" Style="{StaticResource SecondaryButtonStyle}"
+                                            HorizontalAlignment="Stretch" Click="RunPreflightCheckBtn_Click" Margin="0,6,0,0"/>
+                                    <Button Content="📂 Open Reports Folder" Style="{StaticResource SecondaryButtonStyle}"
+                                            HorizontalAlignment="Stretch" Click="OpenReportsFolderBtn_Click" Margin="0,4,0,0"/>
+                                    <Button Content="🧾 Open Logs Folder" Style="{StaticResource SecondaryButtonStyle}"
+                                            HorizontalAlignment="Stretch" Click="OpenLogsFolderBtn_Click" Margin="0,4,0,0"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#2A3A4A" CornerRadius="8" Padding="12" Margin="0,12,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="Recent Cases" Style="{StaticResource SubTextStyle}" FontWeight="SemiBold"/>
+                                    <ListBox x:Name="RecentCasesList"
+                                             Margin="0,8,0,0"
+                                             Height="120"
+                                             Background="#1E1E2E"
+                                             BorderThickness="0"
+                                             Foreground="White"/>
+                                    <Button Content="🔄 Refresh Recent Cases" Style="{StaticResource SecondaryButtonStyle}"
+                                            HorizontalAlignment="Stretch" Click="RefreshRecentCasesBtn_Click" Margin="0,8,0,0"/>
+                                </StackPanel>
+                            </Border>
 
                             <Border Background="#2A3A4A" CornerRadius="8" Padding="12" Margin="0,12,0,0">
                                 <StackPanel>

@@ -149,6 +149,9 @@ This build includes practical operations-focused features:
 - **Operational Status** panel that shows current environment check results.
 - **Auto-run after upload** toggle (saved in runtime settings).
 - **Evidence Bundle Export** (`.zip`) that packages generated HTML and JSON reports.
+- **Explainability section** for each alert that shows why it was triggered.
+- **False-positive controls** via runtime confidence thresholds.
+- **Large PCAP guard** to prevent unstable runs on oversized files.
 - **Runtime settings file**: `%LOCALAPPDATA%\MLSD\appsettings.runtime.json`
 - **Application logs**: `%LOCALAPPDATA%\MLSD\logs\app.log`
 
@@ -159,6 +162,10 @@ This build includes practical operations-focused features:
   "MlDockerImage": "multi-layer-spoof-detector",
   "CicFlowMeterImage": "cicflowmeter",
   "AnalysisTimeoutMs": 900000,
+  "MaxPcapSizeMb": 500,
+  "MinAlertConfidence": 60,
+  "HighConfidenceThreshold": 85,
+  "MediumConfidenceThreshold": 60,
   "DataRootDirectory": "C:\\Users\\<user>\\AppData\\Local\\MLSD",
   "AutoRunAfterUpload": false
 }
