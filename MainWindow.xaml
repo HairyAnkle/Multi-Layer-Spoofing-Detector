@@ -1,21 +1,32 @@
 ﻿<Window x:Class="Multi_Layer_Spoofing_Detector.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="AI-Based Multi-Layer Spoofing Detection and Prevention System"
+        Title="SentinelShield Forensic Network Analyzer"
         Height="800" Width="1400"
-        Background="#1E1E2E"
+        MinHeight="700" MinWidth="1000"
+        Background="{DynamicResource BackgroundBrush}"
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
         AllowsTransparency="True"
-        ResizeMode="CanResize">
+        ResizeMode="CanResize"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        TextOptions.TextFormattingMode="Display"
+        TextOptions.TextRenderingMode="ClearType">
 
     <Window.Resources>
-        <SolidColorBrush x:Key="BackgroundBrush" Color="#1E1E2E"/>
-        <SolidColorBrush x:Key="CardBackgroundBrush" Color="#2A2A3A"/>
-        <SolidColorBrush x:Key="PrimaryAccentBrush" Color="#00C9A7"/>
-        <SolidColorBrush x:Key="SecondaryAccentBrush" Color="#4DB6E2"/>
-        <SolidColorBrush x:Key="TextBrush" Color="#E0E0E0"/>
-        <SolidColorBrush x:Key="SubTextBrush" Color="#B0B0B0"/>
+        <LinearGradientBrush x:Key="BackgroundBrush" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#0F172A" Offset="0"/>
+            <GradientStop Color="#111827" Offset="0.5"/>
+            <GradientStop Color="#1F2937" Offset="1"/>
+        </LinearGradientBrush>
+        <SolidColorBrush x:Key="CardBackgroundBrush" Color="#111827"/>
+        <SolidColorBrush x:Key="PrimaryAccentBrush" Color="#2563EB"/>
+        <SolidColorBrush x:Key="SecondaryAccentBrush" Color="#0EA5E9"/>
+        <SolidColorBrush x:Key="TextBrush" Color="#F3F4F6"/>
+        <SolidColorBrush x:Key="SubTextBrush" Color="#CBD5E1"/>
+        <SolidColorBrush x:Key="InfoBrush" Color="#38BDF8"/>
+        <SolidColorBrush x:Key="BorderBrushSoft" Color="#334155"/>
         <SolidColorBrush x:Key="CriticalBrush" Color="#FF4757"/>
         <SolidColorBrush x:Key="WarningBrush" Color="#FFA502"/>
         <SolidColorBrush x:Key="SafeBrush" Color="#26DE81"/>
@@ -23,11 +34,13 @@
         <Style x:Key="CardStyle" TargetType="Border">
             <Setter Property="Background" Value="{StaticResource CardBackgroundBrush}"/>
             <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrushSoft}"/>
+            <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Margin" Value="8"/>
             <Setter Property="Padding" Value="16"/>
             <Setter Property="Effect">
                 <Setter.Value>
-                    <DropShadowEffect Color="Black" Direction="270" ShadowDepth="4" BlurRadius="8" Opacity="0.3"/>
+                    <DropShadowEffect Color="Black" Direction="270" ShadowDepth="3" BlurRadius="14" Opacity="0.35"/>
                 </Setter.Value>
             </Setter>
         </Style>
@@ -36,7 +49,7 @@
             <Setter Property="Background" Value="{StaticResource PrimaryAccentBrush}"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="Padding" Value="16,10"/>
             <Setter Property="Margin" Value="4"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -50,7 +63,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#00B396"/>
+                                <Setter Property="Background" Value="#1D4ED8"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -76,7 +89,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#3DA5D9"/>
+                                <Setter Property="Background" Value="#0284C7"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -92,32 +105,53 @@
 
         <Style x:Key="HeaderTextStyle" TargetType="TextBlock">
             <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
-            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontSize" Value="21"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Margin" Value="0,0,0,12"/>
         </Style>
 
         <Style x:Key="RegularTextStyle" TargetType="TextBlock">
             <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontSize" Value="16"/>
             <Setter Property="Margin" Value="0,2"/>
         </Style>
 
         <Style x:Key="SubTextStyle" TargetType="TextBlock">
             <Setter Property="Foreground" Value="{StaticResource SubTextBrush}"/>
-            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontSize" Value="14"/>
             <Setter Property="Margin" Value="0,2"/>
+        </Style>
+
+        <Style TargetType="TabControl">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Margin" Value="0,4,0,0"/>
+        </Style>
+
+        <Style TargetType="TabItem">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="Foreground" Value="{StaticResource SubTextBrush}"/>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+                    <Setter Property="FontWeight" Value="SemiBold"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="ListBox">
+            <Setter Property="FontSize" Value="13"/>
         </Style>
     </Window.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="80"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0" Background="{StaticResource CardBackgroundBrush}" 
-                CornerRadius="12,12,0,0" Margin="0,0,0,0" Height="80">
+                CornerRadius="12,12,0,0" Margin="0,0,0,0" Padding="0,6">
             <Border.Effect>
                 <DropShadowEffect Color="Black" Direction="270" ShadowDepth="4" BlurRadius="8" Opacity="0.3"/>
             </Border.Effect>
@@ -134,9 +168,9 @@
                         <TextBlock Text="🛡️" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="AI-Based Multi-Layer Spoofing Detection" 
+                        <TextBlock Text="SENTINELSHIELD NETWORK FORENSICS" 
                                    Style="{StaticResource HeaderTextStyle}" Margin="0"/>
-                        <TextBlock Text="PCAP Analyzer" 
+                        <TextBlock Text="Threat Analytics • Evidence Integrity • Incident Support" 
                                    Style="{StaticResource SubTextStyle}" Margin="0"/>
                     </StackPanel>
                 </StackPanel>
@@ -145,6 +179,10 @@
                     <TextBlock x:Name="DateTimeText" Text="2024-01-15 14:32:45" Style="{StaticResource RegularTextStyle}" 
                                HorizontalAlignment="Right" Margin="0"/>
                     <TextBlock Text="System Active" Style="{StaticResource SubTextStyle}" 
+                               HorizontalAlignment="Right" Margin="0"/>
+                    <TextBlock Text="Legend: Safe (Green) • Caution (Orange) • Critical (Red) • Info (Blue)" 
+                               Style="{StaticResource SubTextStyle}" 
+                               Foreground="{StaticResource InfoBrush}"
                                HorizontalAlignment="Right" Margin="0"/>
                 </StackPanel>
 
@@ -257,14 +295,37 @@
                 </Grid.RowDefinitions>
 
                 <Grid Grid.Row="0" Margin="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="1*"/>
                         <ColumnDefinition Width="1*"/>
                     </Grid.ColumnDefinitions>
 
-                    <Border Grid.Column="0" Style="{StaticResource CardStyle}" Margin="8,38,8,8">
+                    <Border Grid.Row="0" Grid.ColumnSpan="2" Style="{StaticResource CardStyle}" Margin="8,8,8,4">
+                        <WrapPanel>
+                            <StackPanel Margin="8,4" Width="320">
+                                <TextBlock Text="Usability" Foreground="{StaticResource InfoBrush}" FontWeight="SemiBold"/>
+                                <TextBlock Text="Responsive layout, readable text, and guided actions for investigators." Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="8,4" Width="320">
+                                <TextBlock Text="Forensic Integrity" Foreground="{StaticResource InfoBrush}" FontWeight="SemiBold"/>
+                                <TextBlock Text="Case metadata, hashing, and report exports are preserved for auditability." Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="8,4" Width="320">
+                                <TextBlock Text="Operational Guidance" Foreground="{StaticResource InfoBrush}" FontWeight="SemiBold"/>
+                                <TextBlock Text="Run preflight checks first, then inspect case trends and export evidence with one click." Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </WrapPanel>
+                    </Border>
+
+                    <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource CardStyle}" Margin="8,8,8,8">
                         <StackPanel>
-                            <TextBlock Text="System Risk (CVSS + MITRE)" Style="{StaticResource HeaderTextStyle}"/>
+                            <TextBlock Text="1) System Risk Overview" Style="{StaticResource HeaderTextStyle}"/>
 
                             <Border x:Name="NetworkStatusIndicator"
                 Background="{StaticResource SafeBrush}"
@@ -275,38 +336,37 @@
                 MaxWidth="520">
 
                                 <StackPanel HorizontalAlignment="Center">
-
                                     <TextBlock x:Name="NetworkStatusIcon"
-                           Text="✅"
-                           FontSize="48"
-                           HorizontalAlignment="Center"
-                           Margin="0,0,0,8"/>
-
+                                               Visibility="Collapsed"/>
                                     <TextBlock x:Name="NetworkStatusText"
-                           Text="NONE
-"
-                           FontSize="24"
-                           FontWeight="Bold"
-                           Foreground="White"
-                           HorizontalAlignment="Center"
-                           Margin="0,0,0,6"/>
+                                               Visibility="Collapsed"/>
+                                    <TextBlock Text="CV Score"
+                                               Foreground="#E2E2F5"
+                                               FontSize="14"
+                                               HorizontalAlignment="Center"/>
 
                                     <Border x:Name="CvssBadge"
-                        Background="#33FFFFFF"
-                        CornerRadius="8"
-                        Padding="10,6"
-                        Margin="0,0,0,10">
+                                            Background="#33FFFFFF"
+                                            CornerRadius="12"
+                                            Padding="18,10"
+                                            Margin="0,6,0,12">
                                         <TextBlock x:Name="CvssScoreText"
-                               Text="CV Score: 0.0"
-                               FontSize="14"
-                               FontWeight="SemiBold"
-                               Foreground="White"
-                               HorizontalAlignment="Center"/>
+                                                   Text="0.0"
+                                                   FontSize="32"
+                                                   FontWeight="Bold"
+                                                   Foreground="White"
+                                                   HorizontalAlignment="Center"/>
                                     </Border>
 
+                                    <TextBlock Text="Detected techniques"
+                                               Foreground="#E2E2F5"
+                                               FontSize="13"
+                                               HorizontalAlignment="Center"
+                                               Margin="0,0,0,6"/>
+
                                     <ItemsControl x:Name="MitreBullets"
-              HorizontalAlignment="Center"
-              MaxWidth="480">
+                                                  HorizontalAlignment="Center"
+                                                  MaxWidth="480">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
                                                 <TextBlock TextWrapping="Wrap"
@@ -327,22 +387,52 @@
                    Text="Last scan: Ready"
                    Style="{StaticResource SubTextStyle}"
                    HorizontalAlignment="Center"/>
+
+                            <Border Background="#2A344A" CornerRadius="8" Padding="10" Margin="0,10,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="Insights" Style="{StaticResource SubTextStyle}" FontWeight="SemiBold" Foreground="{StaticResource InfoBrush}"/>
+                                    <TextBlock x:Name="InsightsText"
+                                               Text="Run analysis to view summarized insights and suggested actions."
+                                               Style="{StaticResource SubTextStyle}"
+                                               TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#0F172A" CornerRadius="8" Padding="10" Margin="0,10,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="Operational Status" Style="{StaticResource SubTextStyle}" FontWeight="SemiBold"/>
+                                    <TextBlock x:Name="OperationalStatusText"
+                                               Text="Environment checks not run yet."
+                                               Style="{StaticResource SubTextStyle}"
+                                               TextWrapping="Wrap"/>
+                                    <Button Content="Run Preflight Check"
+                                            Style="{StaticResource SecondaryButtonStyle}"
+                                            Click="RunPreflightCheckBtn_Click"
+                                            Margin="0,8,0,0"/>
+                                    <CheckBox x:Name="AutoRunCheckBox"
+                                              Content="Auto-run analysis after upload"
+                                              Foreground="White"
+                                              Margin="2,8,0,0"
+                                              Checked="AutoRunCheckBox_Changed"
+                                              Unchecked="AutoRunCheckBox_Changed"/>
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
                     </Border>
 
 
 
-                    <Border Grid.Column="1" Style="{StaticResource CardStyle}" Margin="8,38,8,8">
+                    <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource CardStyle}" Margin="8,8,8,8">
                         <StackPanel>
-                            <TextBlock Text="📁 File Upload Module" Style="{StaticResource HeaderTextStyle}"/>
-                            <TextBlock Text="Upload saved PCAP files for processing and analysis" 
+                            <TextBlock Text="2) Evidence Intake" Style="{StaticResource HeaderTextStyle}"/>
+                            <TextBlock Text="Load packet captures and prepare validated evidence for automated analysis" 
                                        Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,12"/>
 
                             <Button x:Name="UploadPcapBtn" Content="📤 Upload PCAP File" 
                                     Style="{StaticResource AccentButtonStyle}" Click="UploadPcapBtn_Click"
                                     HorizontalAlignment="Stretch" Margin="4,8"/>
 
-                            <Border x:Name="FileInfoPanel" Background="#333344" CornerRadius="8" Padding="12" 
+                            <Border x:Name="FileInfoPanel" Background="#0F172A" CornerRadius="8" Padding="12" 
                                     Margin="0,12" Visibility="Collapsed">
                                 <StackPanel>
                                     <TextBlock Text="📋 Uploaded File:" Style="{StaticResource SubTextStyle}" 
@@ -365,7 +455,7 @@
                                 </StackPanel>
                             </Border>
 
-                            <Border Background="#2A3A4A" CornerRadius="8" Padding="12" Margin="0,12,0,0">
+                            <Border Background="#1E293B" CornerRadius="8" Padding="12" Margin="0,12,0,0">
                                 <StackPanel>
                                     <TextBlock Text="Module Status:" Style="{StaticResource SubTextStyle}" FontWeight="SemiBold"/>
                                     <TextBlock x:Name="UploadModuleStatus" Text="✓ Ready to accept PCAP files" 
@@ -384,15 +474,15 @@
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Grid.Column="0" Margin="0,0,8,0">
-                            <TextBlock Text="🔬 Packet Analysis Module" Style="{StaticResource HeaderTextStyle}"/>
-                            <TextBlock Text="Parse packets and extract features using Python (Scapy)" 
+                            <TextBlock Text="3) Packet Processing" Style="{StaticResource HeaderTextStyle}"/>
+                            <TextBlock Text="Extract network-flow features and stage them for model inference" 
                                        Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,12"/>
 
-                            <Button x:Name="AnalyzeBtn" Content="▶️ Start Packet Analysis" 
+                            <Button x:Name="AnalyzeBtn" Content="▶ Run Analysis Pipeline" 
                                     Style="{StaticResource AccentButtonStyle}" Click="AnalyzeBtn_Click" 
                                     IsEnabled="False" HorizontalAlignment="Stretch" Margin="0,0,0,12"/>
 
-                            <Border Background="#2A3A4A" CornerRadius="8" Padding="12">
+                            <Border Background="#1E293B" CornerRadius="8" Padding="12">
                                 <StackPanel>
                                     <TextBlock Text="Module Status:" Style="{StaticResource SubTextStyle}" FontWeight="SemiBold"/>
                                     <TextBlock x:Name="AnalysisModuleStatus" Text="⏸ Waiting for PCAP file" 
@@ -404,11 +494,11 @@
                         </StackPanel>
 
                         <StackPanel Grid.Column="1" Margin="8,0,0,0">
-                            <TextBlock Text="🤖 Detection Module" Style="{StaticResource HeaderTextStyle}"/>
-                            <TextBlock Text="Execute trained AI model to detect IP, ARP, and DNS spoofing" 
+                            <TextBlock Text="4) Detection Engine" Style="{StaticResource HeaderTextStyle}"/>
+                            <TextBlock Text="Correlate flow signals and identify spoofing indicators across network layers" 
                                        Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,12"/>
 
-                            <Border Background="#2A3A4A" CornerRadius="8" Padding="12">
+                            <Border Background="#1E293B" CornerRadius="8" Padding="12">
                                 <StackPanel>
                                     <TextBlock Text="Detection Layers:" Style="{StaticResource SubTextStyle}" FontWeight="SemiBold" Margin="0,0,0,8"/>
                                     <StackPanel Orientation="Horizontal" Margin="0,2">
@@ -471,7 +561,7 @@
                                            HorizontalAlignment="Center"/>
 
                                 <ProgressBar x:Name="AnalysisProgressBar" Width="200" Height="6" 
-                                             Margin="0,12,0,0" Background="#333344" 
+                                             Margin="0,12,0,0" Background="#0F172A" 
                                              Foreground="{StaticResource PrimaryAccentBrush}"
                                              BorderThickness="0" IsIndeterminate="True"/>
                             </StackPanel>
@@ -487,8 +577,8 @@
 
                     <Border Grid.Column="0" Style="{StaticResource CardStyle}">
                         <StackPanel>
-                            <TextBlock Text="📊 Results Display Module" Style="{StaticResource HeaderTextStyle}"/>
-                            <TextBlock Text="Detection outputs with threat indicators and logs" 
+                            <TextBlock Text="5) Findings &amp; Investigation" Style="{StaticResource HeaderTextStyle}"/>
+                            <TextBlock Text="Review categorized findings, alerts, and explainability insights" 
                                        Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,8"/>
 
                             <TabControl Background="Transparent" BorderThickness="0">
@@ -522,7 +612,7 @@
                                 </TabControl.Resources>
 
                                 <TabItem Header="🔴 ARP Spoofing">
-                                    <ScrollViewer Height="340" VerticalScrollBarVisibility="Auto">
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto">
                                         <StackPanel x:Name="ArpResultsPanel" Margin="8">
                                             <TextBlock Text="No analysis results yet. Upload a PCAP file and run analysis." 
                                                        Style="{StaticResource SubTextStyle}" TextAlignment="Center" Margin="20"/>
@@ -531,7 +621,7 @@
                                 </TabItem>
 
                                 <TabItem Header="🟡 DNS Spoofing">
-                                    <ScrollViewer Height="340" VerticalScrollBarVisibility="Auto">
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto">
                                         <StackPanel x:Name="DnsResultsPanel" Margin="8">
                                             <TextBlock Text="No analysis results yet. Upload a PCAP file and run analysis." 
                                                        Style="{StaticResource SubTextStyle}" TextAlignment="Center" Margin="20"/>
@@ -540,7 +630,7 @@
                                 </TabItem>
 
                                 <TabItem Header="🟢 IP Spoofing">
-                                    <ScrollViewer Height="340" VerticalScrollBarVisibility="Auto">
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto">
                                         <StackPanel x:Name="IpResultsPanel" Margin="8">
                                             <TextBlock Text="No analysis results yet. Upload a PCAP file and run analysis." 
                                                        Style="{StaticResource SubTextStyle}" TextAlignment="Center" Margin="20"/>
@@ -549,7 +639,7 @@
                                 </TabItem>
 
                                 <TabItem Header="📋 Threat Logs">
-                                    <ScrollViewer Height="340" VerticalScrollBarVisibility="Auto">
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto">
                                         <StackPanel x:Name="AlertsPanel" Margin="8">
                                             <TextBlock Text="No threat alerts. System is secure." 
                                                        Style="{StaticResource SubTextStyle}" TextAlignment="Center" Margin="20"/>
@@ -562,11 +652,11 @@
 
                     <Border Grid.Column="1" Style="{StaticResource CardStyle}">
                         <StackPanel>
-                            <TextBlock Text="📄 Report Generation Module" Style="{StaticResource HeaderTextStyle}"/>
-                            <TextBlock Text="Documentation and preservation of detection results" 
+                            <TextBlock Text="6) Reporting &amp; Evidence Export" Style="{StaticResource HeaderTextStyle}"/>
+                            <TextBlock Text="Generate forensic-ready reports and package evidence artifacts" 
                                        Style="{StaticResource SubTextStyle}" TextWrapping="Wrap" Margin="0,0,0,12"/>
 
-                            <Border Background="#2A3A4A" CornerRadius="8" Padding="12" Margin="0,0,0,12">
+                            <Border Background="#1E293B" CornerRadius="8" Padding="12" Margin="0,0,0,12">
                                 <StackPanel>
                                     <TextBlock Text="Analysis Summary:" Style="{StaticResource SubTextStyle}" FontWeight="SemiBold" Margin="0,0,0,8"/>
                                     <Grid>
@@ -598,8 +688,36 @@
                                     HorizontalAlignment="Stretch" Click="GenerateHtmlReportBtn_Click" Margin="0,4"/>
                             <Button Content="📋 Generate JSON Report" Style="{StaticResource SecondaryButtonStyle}" 
                                     HorizontalAlignment="Stretch" Click="GenerateJsonReportBtn_Click" Margin="0,4"/>
+                            <Button Content="🧾 Export Evidence Bundle (.zip)" Style="{StaticResource SecondaryButtonStyle}"
+                                    HorizontalAlignment="Stretch" Click="ExportEvidenceBundleBtn_Click" Margin="0,4"/>
 
-                            <Border Background="#2A3A4A" CornerRadius="8" Padding="12" Margin="0,12,0,0">
+                            <Border Background="#1E293B" CornerRadius="8" Padding="12" Margin="0,12,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="Quick Actions" Style="{StaticResource SubTextStyle}" FontWeight="SemiBold"/>
+                                    <Button Content="🩺 Run Preflight Check" Style="{StaticResource SecondaryButtonStyle}"
+                                            HorizontalAlignment="Stretch" Click="RunPreflightCheckBtn_Click" Margin="0,6,0,0"/>
+                                    <Button Content="📂 Open Reports Folder" Style="{StaticResource SecondaryButtonStyle}"
+                                            HorizontalAlignment="Stretch" Click="OpenReportsFolderBtn_Click" Margin="0,4,0,0"/>
+                                    <Button Content="🧾 Open Logs Folder" Style="{StaticResource SecondaryButtonStyle}"
+                                            HorizontalAlignment="Stretch" Click="OpenLogsFolderBtn_Click" Margin="0,4,0,0"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#1E293B" CornerRadius="8" Padding="12" Margin="0,12,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="Recent Cases" Style="{StaticResource SubTextStyle}" FontWeight="SemiBold"/>
+                                    <ListBox x:Name="RecentCasesList"
+                                             Margin="0,8,0,0"
+                                             Height="120"
+                                             Background="#1E1E2E"
+                                             BorderThickness="0"
+                                             Foreground="White"/>
+                                    <Button Content="🔄 Refresh Recent Cases" Style="{StaticResource SecondaryButtonStyle}"
+                                            HorizontalAlignment="Stretch" Click="RefreshRecentCasesBtn_Click" Margin="0,8,0,0"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#1E293B" CornerRadius="8" Padding="12" Margin="0,12,0,0">
                                 <StackPanel>
                                     <TextBlock Text="Module Status:" Style="{StaticResource SubTextStyle}" FontWeight="SemiBold"/>
                                     <TextBlock x:Name="ReportModuleStatus" Text="✓ Ready to generate reports" 
