@@ -4,7 +4,7 @@
         Title="AI-Based Multi-Layer Spoofing Detection and Prevention System"
         Height="800" Width="1400"
         MinHeight="700" MinWidth="1000"
-        Background="#1E1E2E"
+        Background="{DynamicResource BackgroundBrush}"
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
         AllowsTransparency="True"
@@ -15,7 +15,11 @@
         TextOptions.TextRenderingMode="ClearType">
 
     <Window.Resources>
-        <SolidColorBrush x:Key="BackgroundBrush" Color="#1E1E2E"/>
+        <LinearGradientBrush x:Key="BackgroundBrush" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#171A2E" Offset="0"/>
+            <GradientStop Color="#1E1E2E" Offset="0.5"/>
+            <GradientStop Color="#252741" Offset="1"/>
+        </LinearGradientBrush>
         <SolidColorBrush x:Key="CardBackgroundBrush" Color="#2A2A3A"/>
         <SolidColorBrush x:Key="PrimaryAccentBrush" Color="#00C9A7"/>
         <SolidColorBrush x:Key="SecondaryAccentBrush" Color="#4DB6E2"/>
@@ -117,16 +121,30 @@
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Margin" Value="0,2"/>
         </Style>
+
+        <Style TargetType="TabControl">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Margin" Value="0,4,0,0"/>
+        </Style>
+
+        <Style TargetType="TabItem">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="10,6"/>
+        </Style>
+
+        <Style TargetType="ListBox">
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
     </Window.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="80"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0" Background="{StaticResource CardBackgroundBrush}" 
-                CornerRadius="12,12,0,0" Margin="0,0,0,0" Height="80">
+                CornerRadius="12,12,0,0" Margin="0,0,0,0" Padding="0,6">
             <Border.Effect>
                 <DropShadowEffect Color="Black" Direction="270" ShadowDepth="4" BlurRadius="8" Opacity="0.3"/>
             </Border.Effect>
@@ -145,7 +163,7 @@
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="AI-Based Multi-Layer Spoofing Detection" 
                                    Style="{StaticResource HeaderTextStyle}" Margin="0"/>
-                        <TextBlock Text="PCAP Analyzer" 
+                        <TextBlock Text="PCAP Forensic Analyzer" 
                                    Style="{StaticResource SubTextStyle}" Margin="0"/>
                     </StackPanel>
                 </StackPanel>
@@ -276,28 +294,22 @@
                     </Grid.ColumnDefinitions>
 
                     <Border Grid.Row="0" Grid.ColumnSpan="2" Style="{StaticResource CardStyle}" Margin="8,8,8,4">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-
-                            <StackPanel Grid.Column="0" Margin="6,0">
+                        <WrapPanel>
+                            <StackPanel Margin="8,4" Width="350">
                                 <TextBlock Text="Usability" Foreground="{StaticResource InfoBrush}" FontWeight="SemiBold"/>
                                 <TextBlock Text="Responsive layout, readable text, and guided actions for investigators." Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
                             </StackPanel>
 
-                            <StackPanel Grid.Column="1" Margin="6,0">
+                            <StackPanel Margin="8,4" Width="350">
                                 <TextBlock Text="Forensic Integrity" Foreground="{StaticResource InfoBrush}" FontWeight="SemiBold"/>
                                 <TextBlock Text="Case metadata, hashing, and report exports are preserved for auditability." Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
                             </StackPanel>
 
-                            <StackPanel Grid.Column="2" Margin="6,0">
+                            <StackPanel Margin="8,4" Width="350">
                                 <TextBlock Text="Operational Guidance" Foreground="{StaticResource InfoBrush}" FontWeight="SemiBold"/>
                                 <TextBlock Text="Use Preflight Check before analysis and monitor recent cases for trends." Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
                             </StackPanel>
-                        </Grid>
+                        </WrapPanel>
                     </Border>
 
                     <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource CardStyle}" Margin="8,8,8,8">
