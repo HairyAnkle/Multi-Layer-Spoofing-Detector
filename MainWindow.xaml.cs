@@ -194,11 +194,12 @@ namespace Multi_Layer_Spoofing_Detector
                     break;
             }
 
-            NetworkStatusText.Text = "";
-            NetworkStatusIcon.Text = "";
+            NetworkStatusText.Text = _currentNetworkStatus;
+            NetworkStatusIcon.Text = statusIcon;
             NetworkStatusIndicator.Background = statusColor;
 
             CvssScoreText.Text = $"{_currentCvssScore:0.0}";
+            CvssRatingText.Text = _currentCvssRating;
 
             MitreBullets.ItemsSource = _currentMitreTechniques ?? new List<string> { "No findings" };
 
@@ -348,13 +349,13 @@ namespace Multi_Layer_Spoofing_Detector
                 DetectionModuleStatus.Text = "Status: Processing Results";
                 DetectionModuleStatus.Foreground = (SolidColorBrush)FindResource("PrimaryAccentBrush");
 
-                ArpDetectionIndicator.Fill = (SolidColorBrush)FindResource("PrimaryAccentBrush");
+                ArpDetectionIndicator.Fill = (SolidColorBrush)FindResource("ProtocolArpBrush");
                 await Task.Delay(800);
 
-                DnsDetectionIndicator.Fill = (SolidColorBrush)FindResource("PrimaryAccentBrush");
+                DnsDetectionIndicator.Fill = (SolidColorBrush)FindResource("ProtocolDnsBrush");
                 await Task.Delay(800);
 
-                IpDetectionIndicator.Fill = (SolidColorBrush)FindResource("PrimaryAccentBrush");
+                IpDetectionIndicator.Fill = (SolidColorBrush)FindResource("ProtocolIpBrush");
                 await Task.Delay(800);
 
                 ConvertMLResultsToAppFormat(mlResult);
@@ -396,11 +397,11 @@ namespace Multi_Layer_Spoofing_Detector
                 DetectionModuleStatus.Foreground = (SolidColorBrush)FindResource("SafeBrush");
 
                 ArpDetectionIndicator.Fill = (_analysisResults.Any(r => r.Category == "ARP" && r.RiskLevel != "Low")) ?
-                    (SolidColorBrush)FindResource("CriticalBrush") : (SolidColorBrush)FindResource("SafeBrush");
+                    (SolidColorBrush)FindResource("CriticalBrush") : (SolidColorBrush)FindResource("ProtocolArpBrush");
                 DnsDetectionIndicator.Fill = (_analysisResults.Any(r => r.Category == "DNS" && r.RiskLevel != "Low")) ?
-                    (SolidColorBrush)FindResource("WarningBrush") : (SolidColorBrush)FindResource("SafeBrush");
+                    (SolidColorBrush)FindResource("WarningBrush") : (SolidColorBrush)FindResource("ProtocolDnsBrush");
                 IpDetectionIndicator.Fill = (_analysisResults.Any(r => r.Category == "IP" && r.RiskLevel != "Low")) ?
-                    (SolidColorBrush)FindResource("WarningBrush") : (SolidColorBrush)FindResource("SafeBrush");
+                    (SolidColorBrush)FindResource("WarningBrush") : (SolidColorBrush)FindResource("ProtocolIpBrush");
 
                 UpdateAlertsDisplay();
 
