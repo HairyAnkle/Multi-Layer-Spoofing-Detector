@@ -215,7 +215,7 @@ namespace Multi_Layer_Spoofing_Detector
             {
                 OpenFileDialog openFileDialog = new OpenFileDialog
                 {
-                    Title = "Select PCAP File - File Upload Module",
+                    Title = "Select PCAP File",
                     Filter = "PCAP files (*.pcap;*.pcapng)|*.pcap;*.pcapng",
                     Multiselect = false
                 };
@@ -281,8 +281,8 @@ namespace Multi_Layer_Spoofing_Detector
 
                 DialogService.ShowSuccess(
                     this,
-                    "File Upload Module",
-                    "PCAP file uploaded successfully to File Upload Module."
+                    "File Upload",
+                    "PCAP file uploaded successfully to File Upload."
                 );
 
                 AppLogger.Info($"PCAP uploaded: {_currentPcapFilePath}");
@@ -416,10 +416,10 @@ namespace Multi_Layer_Spoofing_Detector
                     this,
                     "Analysis Complete",
                     $"Multi-Layer Spoofing Detection Complete!\n\n" +
-                    $"✓ File Upload Module: Success\n" +
-                    $"✓ Packet Analysis Module: {_analysisResults.Count} findings\n" +
-                    $"✓ Detection Module: {_threatAlerts.Count} threats identified\n" +
-                    $"✓ Results Display Module: Ready\n\n" +
+                    $"✓ File Upload: Success\n" +
+                    $"✓ Packet Analysis: {_analysisResults.Count} findings\n" +
+                    $"✓ Detection: {_threatAlerts.Count} threats identified\n" +
+                    $"✓ Results Display: Ready\n\n" +
                     $"Results are now available in the Results Display Module."
                 );
             }
