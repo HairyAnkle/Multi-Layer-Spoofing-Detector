@@ -3,11 +3,16 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="AI-Based Multi-Layer Spoofing Detection and Prevention System"
         Height="800" Width="1400"
+        MinHeight="700" MinWidth="1000"
         Background="#1E1E2E"
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
         AllowsTransparency="True"
-        ResizeMode="CanResize">
+        ResizeMode="CanResize"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        TextOptions.TextFormattingMode="Display"
+        TextOptions.TextRenderingMode="ClearType">
 
     <Window.Resources>
         <SolidColorBrush x:Key="BackgroundBrush" Color="#1E1E2E"/>
@@ -16,6 +21,8 @@
         <SolidColorBrush x:Key="SecondaryAccentBrush" Color="#4DB6E2"/>
         <SolidColorBrush x:Key="TextBrush" Color="#E0E0E0"/>
         <SolidColorBrush x:Key="SubTextBrush" Color="#B0B0B0"/>
+        <SolidColorBrush x:Key="InfoBrush" Color="#4DB6E2"/>
+        <SolidColorBrush x:Key="BorderBrushSoft" Color="#40435A"/>
         <SolidColorBrush x:Key="CriticalBrush" Color="#FF4757"/>
         <SolidColorBrush x:Key="WarningBrush" Color="#FFA502"/>
         <SolidColorBrush x:Key="SafeBrush" Color="#26DE81"/>
@@ -23,6 +30,8 @@
         <Style x:Key="CardStyle" TargetType="Border">
             <Setter Property="Background" Value="{StaticResource CardBackgroundBrush}"/>
             <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrushSoft}"/>
+            <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Margin" Value="8"/>
             <Setter Property="Padding" Value="16"/>
             <Setter Property="Effect">
@@ -92,20 +101,20 @@
 
         <Style x:Key="HeaderTextStyle" TargetType="TextBlock">
             <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
-            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontSize" Value="20"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Margin" Value="0,0,0,12"/>
         </Style>
 
         <Style x:Key="RegularTextStyle" TargetType="TextBlock">
             <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontSize" Value="15"/>
             <Setter Property="Margin" Value="0,2"/>
         </Style>
 
         <Style x:Key="SubTextStyle" TargetType="TextBlock">
             <Setter Property="Foreground" Value="{StaticResource SubTextBrush}"/>
-            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontSize" Value="13"/>
             <Setter Property="Margin" Value="0,2"/>
         </Style>
     </Window.Resources>
@@ -257,14 +266,43 @@
                 </Grid.RowDefinitions>
 
                 <Grid Grid.Row="0" Margin="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="1*"/>
                         <ColumnDefinition Width="1*"/>
                     </Grid.ColumnDefinitions>
 
-                    <Border Grid.Column="0" Style="{StaticResource CardStyle}" Margin="8,38,8,8">
+                    <Border Grid.Row="0" Grid.ColumnSpan="2" Style="{StaticResource CardStyle}" Margin="8,8,8,4">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Margin="6,0">
+                                <TextBlock Text="Usability" Foreground="{StaticResource InfoBrush}" FontWeight="SemiBold"/>
+                                <TextBlock Text="Responsive layout, readable text, and guided actions for investigators." Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Margin="6,0">
+                                <TextBlock Text="Forensic Integrity" Foreground="{StaticResource InfoBrush}" FontWeight="SemiBold"/>
+                                <TextBlock Text="Case metadata, hashing, and report exports are preserved for auditability." Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" Margin="6,0">
+                                <TextBlock Text="Operational Guidance" Foreground="{StaticResource InfoBrush}" FontWeight="SemiBold"/>
+                                <TextBlock Text="Use Preflight Check before analysis and monitor recent cases for trends." Style="{StaticResource SubTextStyle}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource CardStyle}" Margin="8,8,8,8">
                         <StackPanel>
-                            <TextBlock Text="System Risk (CVSS + MITRE)" Style="{StaticResource HeaderTextStyle}"/>
+                            <TextBlock Text="System Risk" Style="{StaticResource HeaderTextStyle}"/>
 
                             <Border x:Name="NetworkStatusIndicator"
                 Background="{StaticResource SafeBrush}"
@@ -275,38 +313,37 @@
                 MaxWidth="520">
 
                                 <StackPanel HorizontalAlignment="Center">
-
                                     <TextBlock x:Name="NetworkStatusIcon"
-                           Text="✅"
-                           FontSize="48"
-                           HorizontalAlignment="Center"
-                           Margin="0,0,0,8"/>
-
+                                               Visibility="Collapsed"/>
                                     <TextBlock x:Name="NetworkStatusText"
-                           Text="NONE
-"
-                           FontSize="24"
-                           FontWeight="Bold"
-                           Foreground="White"
-                           HorizontalAlignment="Center"
-                           Margin="0,0,0,6"/>
+                                               Visibility="Collapsed"/>
+                                    <TextBlock Text="CV Score"
+                                               Foreground="#E2E2F5"
+                                               FontSize="14"
+                                               HorizontalAlignment="Center"/>
 
                                     <Border x:Name="CvssBadge"
-                        Background="#33FFFFFF"
-                        CornerRadius="8"
-                        Padding="10,6"
-                        Margin="0,0,0,10">
+                                            Background="#33FFFFFF"
+                                            CornerRadius="12"
+                                            Padding="18,10"
+                                            Margin="0,6,0,12">
                                         <TextBlock x:Name="CvssScoreText"
-                               Text="CV Score: 0.0"
-                               FontSize="14"
-                               FontWeight="SemiBold"
-                               Foreground="White"
-                               HorizontalAlignment="Center"/>
+                                                   Text="0.0"
+                                                   FontSize="32"
+                                                   FontWeight="Bold"
+                                                   Foreground="White"
+                                                   HorizontalAlignment="Center"/>
                                     </Border>
 
+                                    <TextBlock Text="Detected techniques"
+                                               Foreground="#E2E2F5"
+                                               FontSize="13"
+                                               HorizontalAlignment="Center"
+                                               Margin="0,0,0,6"/>
+
                                     <ItemsControl x:Name="MitreBullets"
-              HorizontalAlignment="Center"
-              MaxWidth="480">
+                                                  HorizontalAlignment="Center"
+                                                  MaxWidth="480">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
                                                 <TextBlock TextWrapping="Wrap"
@@ -327,12 +364,42 @@
                    Text="Last scan: Ready"
                    Style="{StaticResource SubTextStyle}"
                    HorizontalAlignment="Center"/>
+
+                            <Border Background="#2A344A" CornerRadius="8" Padding="10" Margin="0,10,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="Insights" Style="{StaticResource SubTextStyle}" FontWeight="SemiBold" Foreground="{StaticResource InfoBrush}"/>
+                                    <TextBlock x:Name="InsightsText"
+                                               Text="Run analysis to view summarized insights and suggested actions."
+                                               Style="{StaticResource SubTextStyle}"
+                                               TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#333344" CornerRadius="8" Padding="10" Margin="0,10,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="Operational Status" Style="{StaticResource SubTextStyle}" FontWeight="SemiBold"/>
+                                    <TextBlock x:Name="OperationalStatusText"
+                                               Text="Environment checks not run yet."
+                                               Style="{StaticResource SubTextStyle}"
+                                               TextWrapping="Wrap"/>
+                                    <Button Content="Run Preflight Check"
+                                            Style="{StaticResource SecondaryButtonStyle}"
+                                            Click="RunPreflightCheckBtn_Click"
+                                            Margin="0,8,0,0"/>
+                                    <CheckBox x:Name="AutoRunCheckBox"
+                                              Content="Auto-run analysis after upload"
+                                              Foreground="White"
+                                              Margin="2,8,0,0"
+                                              Checked="AutoRunCheckBox_Changed"
+                                              Unchecked="AutoRunCheckBox_Changed"/>
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
                     </Border>
 
 
 
-                    <Border Grid.Column="1" Style="{StaticResource CardStyle}" Margin="8,38,8,8">
+                    <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource CardStyle}" Margin="8,8,8,8">
                         <StackPanel>
                             <TextBlock Text="📁 File Upload Module" Style="{StaticResource HeaderTextStyle}"/>
                             <TextBlock Text="Upload saved PCAP files for processing and analysis" 
@@ -522,7 +589,7 @@
                                 </TabControl.Resources>
 
                                 <TabItem Header="🔴 ARP Spoofing">
-                                    <ScrollViewer Height="340" VerticalScrollBarVisibility="Auto">
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto">
                                         <StackPanel x:Name="ArpResultsPanel" Margin="8">
                                             <TextBlock Text="No analysis results yet. Upload a PCAP file and run analysis." 
                                                        Style="{StaticResource SubTextStyle}" TextAlignment="Center" Margin="20"/>
@@ -531,7 +598,7 @@
                                 </TabItem>
 
                                 <TabItem Header="🟡 DNS Spoofing">
-                                    <ScrollViewer Height="340" VerticalScrollBarVisibility="Auto">
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto">
                                         <StackPanel x:Name="DnsResultsPanel" Margin="8">
                                             <TextBlock Text="No analysis results yet. Upload a PCAP file and run analysis." 
                                                        Style="{StaticResource SubTextStyle}" TextAlignment="Center" Margin="20"/>
@@ -540,7 +607,7 @@
                                 </TabItem>
 
                                 <TabItem Header="🟢 IP Spoofing">
-                                    <ScrollViewer Height="340" VerticalScrollBarVisibility="Auto">
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto">
                                         <StackPanel x:Name="IpResultsPanel" Margin="8">
                                             <TextBlock Text="No analysis results yet. Upload a PCAP file and run analysis." 
                                                        Style="{StaticResource SubTextStyle}" TextAlignment="Center" Margin="20"/>
@@ -549,7 +616,7 @@
                                 </TabItem>
 
                                 <TabItem Header="📋 Threat Logs">
-                                    <ScrollViewer Height="340" VerticalScrollBarVisibility="Auto">
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto">
                                         <StackPanel x:Name="AlertsPanel" Margin="8">
                                             <TextBlock Text="No threat alerts. System is secure." 
                                                        Style="{StaticResource SubTextStyle}" TextAlignment="Center" Margin="20"/>
@@ -598,6 +665,34 @@
                                     HorizontalAlignment="Stretch" Click="GenerateHtmlReportBtn_Click" Margin="0,4"/>
                             <Button Content="📋 Generate JSON Report" Style="{StaticResource SecondaryButtonStyle}" 
                                     HorizontalAlignment="Stretch" Click="GenerateJsonReportBtn_Click" Margin="0,4"/>
+                            <Button Content="🧾 Export Evidence Bundle (.zip)" Style="{StaticResource SecondaryButtonStyle}"
+                                    HorizontalAlignment="Stretch" Click="ExportEvidenceBundleBtn_Click" Margin="0,4"/>
+
+                            <Border Background="#2A3A4A" CornerRadius="8" Padding="12" Margin="0,12,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="Quick Actions" Style="{StaticResource SubTextStyle}" FontWeight="SemiBold"/>
+                                    <Button Content="🩺 Run Preflight Check" Style="{StaticResource SecondaryButtonStyle}"
+                                            HorizontalAlignment="Stretch" Click="RunPreflightCheckBtn_Click" Margin="0,6,0,0"/>
+                                    <Button Content="📂 Open Reports Folder" Style="{StaticResource SecondaryButtonStyle}"
+                                            HorizontalAlignment="Stretch" Click="OpenReportsFolderBtn_Click" Margin="0,4,0,0"/>
+                                    <Button Content="🧾 Open Logs Folder" Style="{StaticResource SecondaryButtonStyle}"
+                                            HorizontalAlignment="Stretch" Click="OpenLogsFolderBtn_Click" Margin="0,4,0,0"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#2A3A4A" CornerRadius="8" Padding="12" Margin="0,12,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="Recent Cases" Style="{StaticResource SubTextStyle}" FontWeight="SemiBold"/>
+                                    <ListBox x:Name="RecentCasesList"
+                                             Margin="0,8,0,0"
+                                             Height="120"
+                                             Background="#1E1E2E"
+                                             BorderThickness="0"
+                                             Foreground="White"/>
+                                    <Button Content="🔄 Refresh Recent Cases" Style="{StaticResource SecondaryButtonStyle}"
+                                            HorizontalAlignment="Stretch" Click="RefreshRecentCasesBtn_Click" Margin="0,8,0,0"/>
+                                </StackPanel>
+                            </Border>
 
                             <Border Background="#2A3A4A" CornerRadius="8" Padding="12" Margin="0,12,0,0">
                                 <StackPanel>

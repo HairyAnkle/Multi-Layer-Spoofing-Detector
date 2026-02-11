@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
-using static Multi_Layer_Spoofing_Detector.MainWindow;
+using Multi_Layer_Spoofing_Detector.Models;
 
 namespace Multi_Layer_Spoofing_Detector.data
 {
@@ -12,7 +12,10 @@ namespace Multi_Layer_Spoofing_Detector.data
 
         public ForensicsRepository()
         {
-            string dbDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "database");
+            string dbDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "MLSD",
+                "database");
             Directory.CreateDirectory(dbDir);
 
             string dbPath = Path.Combine(dbDir, "forensics.db");
@@ -310,23 +313,39 @@ ORDER BY Id ASC;
 
             return hashes;
         }
+
+        public List<ForensicCase> GetRecentCases(int limit = 10)
+        {
+            var cases = new List<ForensicCase>();
+
+            using var conn = new SQLiteConnection(_connectionString);
+            conn.Open();
+
+            using var cmd = new SQLiteCommand(@"
+SELECT CaseId, PcapFile, PcapHash, NetworkStatus, PacketsAnalyzed, AnalysisTime
+FROM Cases
+ORDER BY AnalysisTime DESC
+LIMIT @limit;
+            ", conn);
+
+            cmd.Parameters.AddWithValue("@limit", limit);
+
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                cases.Add(new ForensicCase
+                {
+                    CaseId = reader.GetString(0),
+                    PcapFile = reader.GetString(1),
+                    PcapHash = reader.GetString(2),
+                    NetworkStatus = reader.GetString(3),
+                    PacketsAnalyzed = reader.GetInt32(4),
+                    AnalysisTime = DateTime.Parse(reader.GetString(5))
+                });
+            }
+
+            return cases;
+        }
     }
 
-    public class ForensicCase
-    {
-        public string CaseId { get; set; } = "";
-        public string PcapFile { get; set; } = "";
-        public string PcapHash { get; set; } = "";
-        public string NetworkStatus { get; set; } = "";
-        public int PacketsAnalyzed { get; set; }
-        public DateTime AnalysisTime { get; set; }
-    }
-
-    public class HashRecord
-    {
-        public string EvidenceType { get; set; } = "";
-        public string HashValue { get; set; } = "";
-        public string Algorithm { get; set; } = "";
-        public DateTime Timestamp { get; set; }
-    }
 }
