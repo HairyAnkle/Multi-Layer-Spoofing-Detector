@@ -120,7 +120,7 @@ namespace Multi_Layer_Spoofing_Detector
             statuses.Add($"CICFlowMeter Image ({_settings.CicFlowMeterImage}): {(cicImage ? "PASS" : "FAIL")}");
             if (!cicImage) return (false, string.Join("\n", statuses) + $"\n{dockerError}");
 
-            string dbDir = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MLSD", "database");
+            string dbDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MLSD", "database");
             Directory.CreateDirectory(dbDir);
             statuses.Add("Database Path Writable: PASS");
 
@@ -420,7 +420,7 @@ namespace Multi_Layer_Spoofing_Detector
                     $"✓ Packet Analysis: {_analysisResults.Count} findings\n" +
                     $"✓ Detection: {_threatAlerts.Count} threats identified\n" +
                     $"✓ Results Display: Ready\n\n" +
-                    $"Results are now available in the Results Display."
+                    $"Results are now available in the Results Display Module."
                 );
             }
             catch (Exception ex)
@@ -711,20 +711,20 @@ namespace Multi_Layer_Spoofing_Detector
                 EnsureReportDirectories();
 
                 string stamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-                string htmlPath = System.IO.Path.Combine(HtmlReportDirectory, $"ForensicReport_{stamp}.html");
-                string jsonPath = System.IO.Path.Combine(JsonReportDirectory, $"ForensicReport_{stamp}.json");
+                string htmlPath = Path.Combine(HtmlReportDirectory, $"ForensicReport_{stamp}.html");
+                string jsonPath = Path.Combine(JsonReportDirectory, $"ForensicReport_{stamp}.json");
 
                 GenerateForensicReportHTML(htmlPath);
                 GenerateForensicReportJSON(jsonPath);
 
-                string bundleDir = System.IO.Path.Combine(BaseReportDirectory, "bundle");
+                string bundleDir = Path.Combine(BaseReportDirectory, "bundle");
                 Directory.CreateDirectory(bundleDir);
-                string zipPath = System.IO.Path.Combine(bundleDir, $"EvidenceBundle_{_currentCaseId}_{stamp}.zip");
+                string zipPath = Path.Combine(bundleDir, $"EvidenceBundle_{_currentCaseId}_{stamp}.zip");
 
                 if (File.Exists(zipPath)) File.Delete(zipPath);
                 using var archive = ZipFile.Open(zipPath, ZipArchiveMode.Create);
-                archive.CreateEntryFromFile(htmlPath, System.IO.Path.GetFileName(htmlPath));
-                archive.CreateEntryFromFile(jsonPath, System.IO.Path.GetFileName(jsonPath));
+                archive.CreateEntryFromFile(htmlPath, Path.GetFileName(htmlPath));
+                archive.CreateEntryFromFile(jsonPath, Path.GetFileName(jsonPath));
 
                 DialogService.ShowSuccess(this, "Evidence Bundle", $"Evidence bundle exported successfully.\n\nLocation:\n{zipPath}");
                 AppLogger.Info($"Evidence bundle exported: {zipPath}");
@@ -748,7 +748,7 @@ namespace Multi_Layer_Spoofing_Detector
 
         private void OpenLogsFolderBtn_Click(object sender, RoutedEventArgs e)
         {
-            string logDir = System.IO.Path.Combine(
+            string logDir = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 "MLSD",
                 "logs");
@@ -794,6 +794,13 @@ namespace Multi_Layer_Spoofing_Detector
             TotalThreatsText.Text = _threatAlerts.Count.ToString();
             CriticalAlertsText.Text = _threatAlerts.Count(a => a.Severity == "Critical").ToString();
             PacketsAnalyzedText.Text = _reports.Any() ? _reports[0].PacketsAnalyzed.ToString("N0") : "0";
+
+            int critical = _threatAlerts.Count(a => a.Severity == "Critical");
+            int warnings = _threatAlerts.Count(a => a.Severity == "Warning");
+            InsightsText.Text =
+                $"Current CV Score: {_currentCvssScore:0.0}. " +
+                $"Detected alerts: {critical} critical, {warnings} warning. " +
+                "Action: prioritize high-confidence anomalies and export evidence bundle for documentation.";
         }
 
         private void UpdateAlertsDisplay()
