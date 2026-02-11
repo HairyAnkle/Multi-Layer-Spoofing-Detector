@@ -320,7 +320,6 @@
                                     <TextBlock Text="CV Score"
                                                Foreground="#E2E2F5"
                                                FontSize="14"
-                                               FontWeight="Bold"
                                                HorizontalAlignment="Center"/>
 
                                     <Border x:Name="CvssBadge"
