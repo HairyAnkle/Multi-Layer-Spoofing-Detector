@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="AI-Based Multi-Layer Spoofing Detection and Prevention System"
         Height="860" Width="1440"
-        MinHeight="720" MinWidth="1080"
+        MinHeight="620" MinWidth="860"
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
         AllowsTransparency="True"
@@ -31,6 +31,9 @@
         <SolidColorBrush x:Key="CriticalBrush" Color="#F43F5E"/>
         <SolidColorBrush x:Key="WarningBrush" Color="#F59E0B"/>
         <SolidColorBrush x:Key="SafeBrush" Color="#10B981"/>
+        <SolidColorBrush x:Key="ProtocolArpBrush" Color="#A78BFA"/>
+        <SolidColorBrush x:Key="ProtocolDnsBrush" Color="#22D3EE"/>
+        <SolidColorBrush x:Key="ProtocolIpBrush" Color="#60A5FA"/>
 
         <Style x:Key="CardStyle" TargetType="Border">
             <Setter Property="Background" Value="{StaticResource CardBrush}"/>
@@ -138,7 +141,7 @@
             </Border>
 
             <Grid Grid.Row="1">
-                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="18,18,18,12">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Padding="18,18,18,12">
                     <Grid x:Name="ContentSite">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -146,15 +149,8 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <Grid Grid.Row="0" Margin="0,0,0,14">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-
-                            <Border Grid.Column="0" Style="{StaticResource CardStyle}" Margin="0,0,10,0">
+                        <WrapPanel Grid.Row="0" Margin="0,0,0,14" ItemWidth="300" ItemHeight="150" Orientation="Horizontal">
+                            <Border Style="{StaticResource CardStyle}" Width="300" Margin="0,0,10,10">
                                 <StackPanel>
                                     <TextBlock Text="Overall Network Risk" Style="{StaticResource SubTextStyle}"/>
                                     <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
@@ -166,17 +162,20 @@
                                 </StackPanel>
                             </Border>
 
-                            <Border Grid.Column="1" Style="{StaticResource CardStyle}" Margin="0,0,10,0">
+                            <Border Style="{StaticResource CardStyle}" Width="300" Margin="0,0,10,10">
                                 <StackPanel>
                                     <TextBlock Text="CVSS Score" Style="{StaticResource SubTextStyle}"/>
                                     <Border x:Name="CvssBadge" Background="#1E3A5F" CornerRadius="8" Padding="10" Margin="0,10,0,0" HorizontalAlignment="Left">
-                                        <TextBlock x:Name="CvssScoreText" Text="0.0" FontSize="30" FontWeight="Bold" Foreground="White"/>
+                                        <StackPanel>
+                                            <TextBlock x:Name="CvssScoreText" Text="0.0" FontSize="30" FontWeight="Bold" Foreground="White"/>
+                                            <TextBlock x:Name="CvssRatingText" Text="NONE" Foreground="#BFDBFE" FontSize="12" FontWeight="SemiBold"/>
+                                        </StackPanel>
                                     </Border>
                                     <TextBlock Text="Higher scores indicate more severe impact." Style="{StaticResource SubTextStyle}" Margin="0,8,0,0"/>
                                 </StackPanel>
                             </Border>
 
-                            <Border Grid.Column="2" Style="{StaticResource CardStyle}" Margin="0,0,10,0">
+                            <Border Style="{StaticResource CardStyle}" Width="300" Margin="0,0,10,10">
                                 <StackPanel>
                                     <TextBlock Text="Traffic Insights" Style="{StaticResource SubTextStyle}"/>
                                     <TextBlock x:Name="PacketsAnalyzedText" Text="0" FontSize="30" FontWeight="Bold" Foreground="{StaticResource TextBrush}" Margin="0,6,0,0"/>
@@ -185,14 +184,14 @@
                                 </StackPanel>
                             </Border>
 
-                            <Border Grid.Column="3" Style="{StaticResource CardStyle}" Margin="0">
+                            <Border Style="{StaticResource CardStyle}" Width="300" Margin="0,0,10,10">
                                 <StackPanel>
                                     <TextBlock Text="Critical Alerts" Style="{StaticResource SubTextStyle}"/>
                                     <TextBlock x:Name="CriticalAlertsText" Text="0" FontSize="30" FontWeight="Bold" Foreground="{StaticResource CriticalBrush}" Margin="0,6,0,0"/>
                                     <TextBlock Text="Requires immediate triage" Style="{StaticResource SubTextStyle}"/>
                                 </StackPanel>
                             </Border>
-                        </Grid>
+                        </WrapPanel>
 
                         <Grid Grid.Row="1" Margin="0,0,0,10">
                             <Grid.ColumnDefinitions>
@@ -251,17 +250,17 @@
 
                                         <Grid Margin="0,0,0,8">
                                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                            <Ellipse x:Name="ArpDetectionIndicator" Width="10" Height="10" Fill="#64748B" Margin="0,4,10,0"/>
+                                            <Ellipse x:Name="ArpDetectionIndicator" Width="10" Height="10" Fill="{StaticResource ProtocolArpBrush}" Margin="0,4,10,0"/>
                                             <TextBlock Grid.Column="1" Text="ARP spoofing detection" Style="{StaticResource RegularTextStyle}"/>
                                         </Grid>
                                         <Grid Margin="0,0,0,8">
                                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                            <Ellipse x:Name="DnsDetectionIndicator" Width="10" Height="10" Fill="#64748B" Margin="0,4,10,0"/>
+                                            <Ellipse x:Name="DnsDetectionIndicator" Width="10" Height="10" Fill="{StaticResource ProtocolDnsBrush}" Margin="0,4,10,0"/>
                                             <TextBlock Grid.Column="1" Text="DNS spoofing detection" Style="{StaticResource RegularTextStyle}"/>
                                         </Grid>
                                         <Grid>
                                             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                            <Ellipse x:Name="IpDetectionIndicator" Width="10" Height="10" Fill="#64748B" Margin="0,4,10,0"/>
+                                            <Ellipse x:Name="IpDetectionIndicator" Width="10" Height="10" Fill="{StaticResource ProtocolIpBrush}" Margin="0,4,10,0"/>
                                             <TextBlock Grid.Column="1" Text="IP spoofing detection" Style="{StaticResource RegularTextStyle}"/>
                                         </Grid>
                                     </StackPanel>
