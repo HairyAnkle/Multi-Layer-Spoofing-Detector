@@ -457,7 +457,7 @@
 
                             <Border Background="#1E293B" CornerRadius="8" Padding="12" Margin="0,12,0,0">
                                 <StackPanel>
-                                    <TextBlock Text="Module Status:" Style="{StaticResource SubTextStyle}" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Status:" Style="{StaticResource SubTextStyle}" FontWeight="SemiBold"/>
                                     <TextBlock x:Name="UploadModuleStatus" Text="✓ Ready to accept PCAP files" 
                                                Style="{StaticResource RegularTextStyle}" Foreground="{StaticResource SafeBrush}"/>
                                 </StackPanel>
@@ -484,7 +484,7 @@
 
                             <Border Background="#1E293B" CornerRadius="8" Padding="12">
                                 <StackPanel>
-                                    <TextBlock Text="Module Status:" Style="{StaticResource SubTextStyle}" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Status:" Style="{StaticResource SubTextStyle}" FontWeight="SemiBold"/>
                                     <TextBlock x:Name="AnalysisModuleStatus" Text="⏸ Waiting for PCAP file" 
                                                Style="{StaticResource RegularTextStyle}" Foreground="{StaticResource WarningBrush}"/>
                                     <TextBlock x:Name="AnalysisModuleDetails" Text="Upload a file to begin" 
@@ -719,7 +719,7 @@
 
                             <Border Background="#1E293B" CornerRadius="8" Padding="12" Margin="0,12,0,0">
                                 <StackPanel>
-                                    <TextBlock Text="Module Status:" Style="{StaticResource SubTextStyle}" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Status:" Style="{StaticResource SubTextStyle}" FontWeight="SemiBold"/>
                                     <TextBlock x:Name="ReportModuleStatus" Text="✓ Ready to generate reports" 
                                                Style="{StaticResource RegularTextStyle}" Foreground="{StaticResource SafeBrush}"/>
                                 </StackPanel>

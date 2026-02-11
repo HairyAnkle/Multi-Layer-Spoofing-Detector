@@ -364,3 +364,9 @@ FodyWeavers.xsd
 
 # pkl
 integration/models/*.pkl
+
+dist-images/
+*.tar
+*.tar.gz
+*.tgz
+
