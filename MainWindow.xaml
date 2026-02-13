@@ -588,6 +588,26 @@
                                                    FontFamily="Segoe UI" FontSize="9"
                                                    Margin="0,3,0,0"/>
 
+                                        <Border Background="{StaticResource BgBase}" CornerRadius="6" Padding="8" Margin="0,8,0,0"
+                                                BorderBrush="{StaticResource BorderNormal}" BorderThickness="1">
+                                            <StackPanel>
+                                                <TextBlock Text="MITRE ATT&amp;CK (current findings)"
+                                                           Foreground="{StaticResource TextSecondary}"
+                                                           FontFamily="Segoe UI" FontSize="10" FontWeight="SemiBold"
+                                                           Margin="0,0,0,4"/>
+                                                <ItemsControl x:Name="MitreBullets">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <TextBlock Text="•  {Binding}"
+                                                                       Foreground="{StaticResource TextPrimary}"
+                                                                       FontFamily="Consolas" FontSize="10"
+                                                                       TextWrapping="Wrap" Margin="0,0,0,2"/>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </Border>
+
                                     </StackPanel>
                                 </Grid>
                             </Border>
@@ -1537,7 +1557,7 @@
                                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                                             <ListBox.ItemTemplate>
                                                 <DataTemplate>
-                                                    <TextBlock Text="{Binding}" Foreground="{StaticResource TextPrimary}" FontFamily="Consolas" FontSize="12" TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Text="{Binding}" Foreground="{StaticResource TextPrimary}" FontFamily="Consolas" FontSize="11" TextWrapping="Wrap"/>
                                                 </DataTemplate>
                                             </ListBox.ItemTemplate>
                                             <ListBox.ItemContainerStyle>
@@ -1912,7 +1932,7 @@
                 <Grid Visibility="Collapsed" Width="0" Height="0">
                     <TextBlock x:Name="NetworkStatusIcon" Text="" FontSize="1"/>
                     <Ellipse x:Name="StatusIndicator" Width="1" Height="1"/>
-                    <ItemsControl x:Name="MitreBullets">
+                    <ItemsControl x:Name="MitreBulletsCompat">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding}" FontSize="1"/>
