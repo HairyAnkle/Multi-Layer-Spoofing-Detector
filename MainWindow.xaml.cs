@@ -200,10 +200,18 @@ namespace Multi_Layer_Spoofing_Detector
 
         private void UpdateCvssLevelIndicators()
         {
-            CvssLevelLow.Opacity = _currentCvssScore > 0 ? 1.0 : 0.35;
-            CvssLevelMedium.Opacity = _currentCvssScore >= 4.0 ? 1.0 : 0.35;
-            CvssLevelHigh.Opacity = _currentCvssScore >= 7.0 ? 1.0 : 0.35;
-            CvssLevelCritical.Opacity = _currentCvssScore >= 9.0 ? 1.0 : 0.35;
+            SetCvssLevelOpacity("CvssLevelLow", _currentCvssScore > 0 ? 1.0 : 0.35);
+            SetCvssLevelOpacity("CvssLevelMedium", _currentCvssScore >= 4.0 ? 1.0 : 0.35);
+            SetCvssLevelOpacity("CvssLevelHigh", _currentCvssScore >= 7.0 ? 1.0 : 0.35);
+            SetCvssLevelOpacity("CvssLevelCritical", _currentCvssScore >= 9.0 ? 1.0 : 0.35);
+        }
+
+        private void SetCvssLevelOpacity(string elementName, double opacity)
+        {
+            if (FindName(elementName) is Border levelBorder)
+            {
+                levelBorder.Opacity = opacity;
+            }
         }
 
         #endregion        
