@@ -56,6 +56,16 @@
         <SolidColorBrush x:Key="TextSecondary"  Color="#6B9EC8"/>
         <SolidColorBrush x:Key="TextMuted"      Color="#3A5D80"/>
 
+        <!-- Compatibility aliases for code-behind resource keys -->
+        <SolidColorBrush x:Key="CriticalBrush"      Color="#F04058"/>
+        <SolidColorBrush x:Key="WarningBrush"       Color="#F5A623"/>
+        <SolidColorBrush x:Key="PrimaryAccentBrush" Color="#06CFEE"/>
+        <SolidColorBrush x:Key="ProtocolArpBrush"   Color="#A78BFA"/>
+        <SolidColorBrush x:Key="ProtocolDnsBrush"   Color="#22D3EE"/>
+        <SolidColorBrush x:Key="ProtocolIpBrush"    Color="#60A5FA"/>
+        <SolidColorBrush x:Key="TextBrush"          Color="#D8EAF8"/>
+        <SolidColorBrush x:Key="SubTextBrush"       Color="#6B9EC8"/>
+
         <!-- Background gradients -->
         <LinearGradientBrush x:Key="AppGradient" StartPoint="0,0" EndPoint="1,1">
             <GradientStop Color="#07111E" Offset="0"/>
@@ -118,6 +128,10 @@
             <Setter Property="FontSize"     Value="13"/>
             <Setter Property="TextWrapping" Value="Wrap"/>
         </Style>
+
+        <!-- Compatibility text styles referenced by code-behind -->
+        <Style x:Key="RegularTextStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyStyle}"/>
+        <Style x:Key="SubTextStyle" TargetType="TextBlock" BasedOn="{StaticResource SubTitleStyle}"/>
 
         <Style x:Key="MonoStyle" TargetType="TextBlock">
             <Setter Property="Foreground"   Value="{StaticResource TextPrimary}"/>
@@ -289,13 +303,21 @@
                         </StackPanel>
                     </StackPanel>
 
-                    <!-- Date/time -->
-                    <TextBlock x:Name="DateTimeText"
-                               Grid.Column="1"
-                               Foreground="{StaticResource TextSecondary}"
-                               FontFamily="Consolas" FontSize="11"
-                               VerticalAlignment="Center"
-                               Margin="0,0,14,0"/>
+                    <!-- Date/time + theme -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock x:Name="DateTimeText"
+                                   Foreground="{StaticResource TextSecondary}"
+                                   FontFamily="Consolas" FontSize="11"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,10,0"/>
+                        <Button x:Name="ThemeToggleButton"
+                                Content="☀ Light"
+                                Click="ThemeToggleButton_Click"
+                                Style="{StaticResource GhostBtnStyle}"
+                                Padding="8,3"
+                                MinWidth="68"
+                                Margin="0,0,8,0"/>
+                    </StackPanel>
 
                     <!-- Window controls -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
@@ -495,7 +517,7 @@
                                                     Background="{StaticResource SafeBrush}"
                                                     Margin="0,2,10,0"/>
                                             <TextBlock x:Name="NetworkStatusText"
-                                                       Text="SECURE"
+                                                       Text="0.0"
                                                        Style="{StaticResource KpiValueStyle}"
                                                        Foreground="{StaticResource SafeBrush}"/>
                                         </StackPanel>
@@ -531,11 +553,11 @@
                                                        Foreground="{StaticResource TextMuted}"
                                                        FontFamily="Segoe UI" FontSize="10" FontWeight="Bold"
                                                         VerticalAlignment="Center"/>
-                                            <Border Background="#0E1E3A" CornerRadius="4" Padding="5,2" Margin="8,0,0,0"
+                                            <Border Background="{StaticResource BgBase}" CornerRadius="4" Padding="6,2" Margin="8,0,0,0"
                                                     VerticalAlignment="Center"
-                                                    ToolTip="CVSS (Common Vulnerability Scoring System) v3 rates threat severity 0–10. 0–3.9 Low | 4–6.9 Medium | 7–8.9 High | 9–10 Critical">
-                                                <TextBlock Text="?" Foreground="{StaticResource InfoBrush}"
-                                                           FontFamily="Segoe UI" FontSize="10" FontWeight="Bold"/>
+                                                    BorderBrush="{StaticResource BorderNormal}" BorderThickness="1">
+                                                <TextBlock Text="0-10 scale" Foreground="{StaticResource TextSecondary}"
+                                                           FontFamily="Segoe UI" FontSize="10" FontWeight="SemiBold"/>
                                             </Border>
                                         </StackPanel>
                                         <TextBlock x:Name="CvssScoreText"
@@ -544,9 +566,9 @@
                                                    Foreground="{StaticResource InfoBrush}"
                                                    Margin="0,8,0,0"/>
                                         <TextBlock x:Name="CvssRatingText"
-                                                   Text="NONE"
-                                                   Foreground="{StaticResource InfoBrush}"
-                                                   FontFamily="Segoe UI" FontSize="12" FontWeight="Bold"
+                                                   Text=""
+                                                   Foreground="{StaticResource TextSecondary}"
+                                                   FontFamily="Segoe UI" FontSize="11"
                                                    Margin="0,2,0,0"/>
                                         <!-- Mini range bar -->
                                         <Grid Margin="0,8,0,0">
@@ -556,31 +578,12 @@
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="*"/>
                                             </Grid.ColumnDefinitions>
-                                            <Border Grid.Column="0" Height="4" Background="#1A6040" CornerRadius="2,0,0,2"
-                                                    ToolTip="Low: 0.1 – 3.9"/>
-                                            <Border Grid.Column="1" Height="4" Background="#6A4010"
-                                                    ToolTip="Medium: 4.0 – 6.9"/>
-                                            <Border Grid.Column="2" Height="4" Background="#6A1020"
-                                                    ToolTip="High: 7.0 – 8.9"/>
-                                            <Border Grid.Column="3" Height="4" Background="#8B0020" CornerRadius="0,2,2,0"
-                                                    ToolTip="Critical: 9.0 – 10.0"/>
+                                            <Border x:Name="CvssLevelLow" Grid.Column="0" Height="4" Background="#1A6040" CornerRadius="2,0,0,2"/>
+                                            <Border x:Name="CvssLevelMedium" Grid.Column="1" Height="4" Background="#6A4010"/>
+                                            <Border x:Name="CvssLevelHigh" Grid.Column="2" Height="4" Background="#6A1020"/>
+                                            <Border x:Name="CvssLevelCritical" Grid.Column="3" Height="4" Background="#8B0020" CornerRadius="0,2,2,0"/>
                                         </Grid>
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="*"/>
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Text="LOW" Grid.Column="0" Foreground="{StaticResource TextMuted}"
-                                                       FontFamily="Segoe UI" FontSize="9" Margin="0,2,0,0"/>
-                                            <TextBlock Text="MED" Grid.Column="1" Foreground="{StaticResource TextMuted}"
-                                                       FontFamily="Segoe UI" FontSize="9" Margin="0,2,0,0"/>
-                                            <TextBlock Text="HIGH" Grid.Column="2" Foreground="{StaticResource TextMuted}"
-                                                       FontFamily="Segoe UI" FontSize="9" Margin="0,2,0,0"/>
-                                            <TextBlock Text="CRIT" Grid.Column="3" Foreground="{StaticResource TextMuted}"
-                                                       FontFamily="Segoe UI" FontSize="9" Margin="0,2,0,0"/>
-                                        </Grid>
+
                                     </StackPanel>
                                 </Grid>
                             </Border>
@@ -1372,6 +1375,43 @@
                                                 </StackPanel>
                                             </Border>
                                         </Grid>
+
+                                        <Border Background="{StaticResource BgBase}"
+                                                BorderBrush="{StaticResource BorderNormal}"
+                                                BorderThickness="1"
+                                                CornerRadius="8"
+                                                Padding="10"
+                                                Margin="0,10,0,0">
+                                            <TextBlock x:Name="InsightsText"
+                                                       Text="Run an analysis to populate insights."
+                                                       Foreground="{StaticResource TextSecondary}"
+                                                       FontFamily="Segoe UI"
+                                                       FontSize="12"
+                                                       TextWrapping="Wrap"/>
+                                        </Border>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Style="{StaticResource CardStyle}">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
+                                            <TextBlock Text="🧭" FontSize="15" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="CVSS v3 Rating Guide" Style="{StaticResource TitleStyle}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <TextBlock Text="Reference ranges used for score interpretation in this dashboard and reports."
+                                                   Style="{StaticResource SubTitleStyle}"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Border Grid.Column="0" Background="#143A2A" CornerRadius="8" Padding="8" Margin="0,0,6,0"><TextBlock Text="Low: 0.1-3.9" Foreground="{StaticResource SafeBrush}" FontFamily="Segoe UI" FontSize="11"/></Border>
+                                            <Border Grid.Column="1" Background="#3A2A14" CornerRadius="8" Padding="8" Margin="0,0,6,0"><TextBlock Text="Medium: 4.0-6.9" Foreground="{StaticResource WarnBrush}" FontFamily="Segoe UI" FontSize="11"/></Border>
+                                            <Border Grid.Column="2" Background="#3A1F14" CornerRadius="8" Padding="8" Margin="0,0,6,0"><TextBlock Text="High: 7.0-8.9" Foreground="#FF7A59" FontFamily="Segoe UI" FontSize="11"/></Border>
+                                            <Border Grid.Column="3" Background="#3A141A" CornerRadius="8" Padding="8"><TextBlock Text="Critical: 9.0-10.0" Foreground="{StaticResource CritBrush}" FontFamily="Segoe UI" FontSize="11"/></Border>
+                                        </Grid>
                                     </StackPanel>
                                 </Border>
 
@@ -1524,6 +1564,11 @@
                                                  Foreground="{StaticResource TextPrimary}"
                                                  Margin="0,0,0,0"
                                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding}" Foreground="{StaticResource TextPrimary}" FontFamily="Consolas" FontSize="12" TextTrimming="CharacterEllipsis"/>
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
                                             <ListBox.ItemContainerStyle>
                                                 <Style TargetType="ListBoxItem">
                                                     <Setter Property="Background"   Value="Transparent"/>
@@ -1554,16 +1599,6 @@
                                                     </Setter>
                                                 </Style>
                                             </ListBox.ItemContainerStyle>
-                                            <!-- Default placeholder item shown before any analysis -->
-                                            <ListBoxItem>
-                                                <StackPanel Orientation="Horizontal">
-                                                    <Ellipse Width="8" Height="8" Fill="{StaticResource TextMuted}"
-                                                             Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                                    <TextBlock Text="No cases recorded yet"
-                                                               Foreground="{StaticResource TextMuted}"
-                                                               FontFamily="Segoe UI" FontSize="12"/>
-                                                </StackPanel>
-                                            </ListBoxItem>
                                         </ListBox>
                                         <Button Content="↻  Refresh"
                                                 Click="RefreshRecentCasesBtn_Click"
@@ -1627,7 +1662,7 @@
                                                         </StackPanel>
                                                     </Border>
                                                 </StackPanel>
-                                                <StackPanel x:Name="ArpResultsPanel">
+                                                <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="220"><StackPanel x:Name="ArpResultsPanel">
                                                     <Grid Margin="0,0,0,6">
                                                         <Grid.ColumnDefinitions>
                                                             <ColumnDefinition Width="*"/>
@@ -1660,7 +1695,7 @@
                                                         <TextBlock Text="Confidence" Foreground="{StaticResource TextSecondary}" FontFamily="Segoe UI" FontSize="12"/>
                                                         <TextBlock x:Name="ArpConfText" Grid.Column="1" Text="—" Foreground="{StaticResource TextMuted}" FontFamily="Consolas" FontSize="12" FontWeight="Bold"/>
                                                     </Grid>
-                                                </StackPanel>
+                                                </StackPanel></ScrollViewer>
                                             </StackPanel>
                                         </Border>
 
@@ -1680,7 +1715,7 @@
                                                         </StackPanel>
                                                     </Border>
                                                 </StackPanel>
-                                                <StackPanel x:Name="DnsResultsPanel">
+                                                <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="220"><StackPanel x:Name="DnsResultsPanel">
                                                     <Grid Margin="0,0,0,6">
                                                         <Grid.ColumnDefinitions>
                                                             <ColumnDefinition Width="*"/>
@@ -1713,7 +1748,7 @@
                                                         <TextBlock Text="Confidence" Foreground="{StaticResource TextSecondary}" FontFamily="Segoe UI" FontSize="12"/>
                                                         <TextBlock x:Name="DnsConfText" Grid.Column="1" Text="—" Foreground="{StaticResource TextMuted}" FontFamily="Consolas" FontSize="12" FontWeight="Bold"/>
                                                     </Grid>
-                                                </StackPanel>
+                                                </StackPanel></ScrollViewer>
                                             </StackPanel>
                                         </Border>
 
@@ -1733,7 +1768,7 @@
                                                         </StackPanel>
                                                     </Border>
                                                 </StackPanel>
-                                                <StackPanel x:Name="IpResultsPanel">
+                                                <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="220"><StackPanel x:Name="IpResultsPanel">
                                                     <Grid Margin="0,0,0,6">
                                                         <Grid.ColumnDefinitions>
                                                             <ColumnDefinition Width="*"/>
@@ -1766,7 +1801,7 @@
                                                         <TextBlock Text="Confidence" Foreground="{StaticResource TextSecondary}" FontFamily="Segoe UI" FontSize="12"/>
                                                         <TextBlock x:Name="IpConfText" Grid.Column="1" Text="—" Foreground="{StaticResource TextMuted}" FontFamily="Consolas" FontSize="12" FontWeight="Bold"/>
                                                     </Grid>
-                                                </StackPanel>
+                                                </StackPanel></ScrollViewer>
                                             </StackPanel>
                                         </Border>
                                     </Grid>
@@ -1851,7 +1886,10 @@
                                     </Grid>
 
                                     <CheckBox x:Name="AutoRunCheckBox"
-                                              Content="Auto-run analysis after valid upload"
+                                              Content="Auto-run analysis after valid upload (disabled; run manually)"
+                                              IsEnabled="False"
+                                              Checked="AutoRunCheckBox_Changed"
+                                              Unchecked="AutoRunCheckBox_Changed"
                                               Style="{StaticResource ToggleStyle}"/>
                                 </StackPanel>
                             </Border>
@@ -1910,7 +1948,6 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                    <TextBlock x:Name="InsightsText" Text="" FontSize="1"/>
                 </Grid>
 
             </Grid>
