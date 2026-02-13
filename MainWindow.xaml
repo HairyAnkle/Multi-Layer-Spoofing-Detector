@@ -352,7 +352,7 @@
                  Addresses panel feedback: "color scheme not dictated"
                  Every color is named and explained here.
                  ═══════════════════════════════════════ -->
-            <Border Grid.Row="1"
+            <Border x:Name="LegendBarBorder" Grid.Row="1"
                     Background="#091628"
                     BorderBrush="#1A3355"
                     BorderThickness="0,0,0,1"
@@ -465,8 +465,8 @@
             <!-- ═══════════════════════════════════════
                  ROW 2 — MAIN CONTENT AREA
                  ═══════════════════════════════════════ -->
-            <Grid Grid.Row="2">
-                <ScrollViewer VerticalScrollBarVisibility="Auto"
+            <Grid x:Name="MainContentGrid" Grid.Row="2">
+                <ScrollViewer x:Name="MainContentScrollViewer" VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled"
                               Padding="16,14,16,14">
                     <Grid>
@@ -583,6 +583,10 @@
                                             <Border x:Name="CvssLevelHigh" Grid.Column="2" Height="4" Background="#6A1020"/>
                                             <Border x:Name="CvssLevelCritical" Grid.Column="3" Height="4" Background="#8B0020" CornerRadius="0,2,2,0"/>
                                         </Grid>
+                                        <TextBlock Text="CVSS range indicator"
+                                                   Foreground="{StaticResource TextMuted}"
+                                                   FontFamily="Segoe UI" FontSize="9"
+                                                   Margin="0,3,0,0"/>
 
                                     </StackPanel>
                                 </Grid>
@@ -805,46 +809,11 @@
                                                 Margin="0,0,0,10"
                                                 HorizontalAlignment="Stretch"/>
 
-                                        <Grid Margin="0,0,0,8">
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition/>
-                                                <RowDefinition/>
-                                            </Grid.RowDefinitions>
-                                            <Border Grid.Row="0" Height="8" Background="#091628"
-                                                    CornerRadius="4" Margin="0,0,0,4">
-                                                <Border x:Name="ProgressFillBorder"
-                                                        HorizontalAlignment="Left"
-                                                        Width="0"
-                                                        CornerRadius="4">
-                                                    <Border.Background>
-                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                                            <GradientStop Color="#3B82F6" Offset="0"/>
-                                                            <GradientStop Color="#06CFEE" Offset="1"/>
-                                                        </LinearGradientBrush>
-                                                    </Border.Background>
-                                                </Border>
-                                            </Border>
-                                            <ProgressBar x:Name="AnalysisProgressBar"
-                                                         Grid.Row="0"
-                                                         Height="8" Minimum="0" Maximum="100" Value="0"
-                                                         Visibility="Visible"
-                                                         Margin="0,0,0,4"/>
-                                            <Grid Grid.Row="1">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock x:Name="AnalysisModuleStatus"
-                                                           Text="⏸  Waiting for PCAP file"
-                                                           Foreground="{StaticResource WarnBrush}"
-                                                           FontFamily="Segoe UI" FontSize="12"/>
-                                                <TextBlock x:Name="ProgressPctText"
-                                                           Grid.Column="1"
-                                                           Text="0%"
-                                                           Foreground="{StaticResource TextSecondary}"
-                                                           FontFamily="Consolas" FontSize="11"/>
-                                            </Grid>
-                                        </Grid>
+                                        <TextBlock x:Name="AnalysisModuleStatus"
+                                                   Text="⏸  Waiting for PCAP file"
+                                                   Foreground="{StaticResource WarnBrush}"
+                                                   FontFamily="Segoe UI" FontSize="12"
+                                                   Margin="0,0,0,8"/>
                                         <TextBlock x:Name="AnalysisModuleDetails"
                                                    Text="Upload a file to enable the pipeline."
                                                    Foreground="{StaticResource TextSecondary}"
@@ -876,8 +845,8 @@
                                                    FontFamily="Segoe UI" FontSize="11"
                                                    TextWrapping="Wrap">
                                             Status indicators follow the Color Key above.
-                                            Dot turns <Run Foreground="{StaticResource WarnBrush}" FontWeight="SemiBold">amber</Run> when anomalies found,
-                                            <Run Foreground="{StaticResource CritBrush}" FontWeight="SemiBold">red</Run> when attack confirmed.
+                                            Each layer stays in its own protocol color while normal,
+                                            then turns <Run Foreground="{StaticResource CritBrush}" FontWeight="SemiBold">red</Run> when that same layer has anomalies.
                                         </TextBlock>
 
                                         <TextBlock x:Name="DetectionModuleStatus"
@@ -1150,7 +1119,7 @@
                                                                    Foreground="{StaticResource TextPrimary}"
                                                                    FontFamily="Segoe UI" FontSize="12" FontWeight="SemiBold"/>
                                                         <TextBlock Grid.Column="1"
-                                                                   Text="clean vs. flagged"
+                                                                   Text="anomalies by protocol"
                                                                    Foreground="{StaticResource TextMuted}"
                                                                    FontFamily="Segoe UI" FontSize="10"/>
                                                     </Grid>
@@ -1169,10 +1138,12 @@
                                                         </lvc:CartesianChart.AxisY>
                                                     </lvc:CartesianChart>
                                                     <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                                                        <Ellipse Width="8" Height="8" Fill="{StaticResource SafeBrush}" Margin="0,0,5,0" VerticalAlignment="Center"/>
-                                                        <TextBlock Text="Clean" Foreground="{StaticResource TextMuted}" FontFamily="Segoe UI" FontSize="10" Margin="0,0,12,0"/>
-                                                        <Ellipse Width="8" Height="8" Fill="{StaticResource CritBrush}" Margin="0,0,5,0" VerticalAlignment="Center"/>
-                                                        <TextBlock Text="Flagged" Foreground="{StaticResource TextMuted}" FontFamily="Segoe UI" FontSize="10"/>
+                                                        <Ellipse Width="8" Height="8" Fill="{StaticResource ArpBrush}" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="ARP" Foreground="{StaticResource TextMuted}" FontFamily="Segoe UI" FontSize="10" Margin="0,0,12,0"/>
+                                                        <Ellipse Width="8" Height="8" Fill="{StaticResource DnsBrush}" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="DNS" Foreground="{StaticResource TextMuted}" FontFamily="Segoe UI" FontSize="10" Margin="0,0,12,0"/>
+                                                        <Ellipse Width="8" Height="8" Fill="{StaticResource IpBrush}" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="IP" Foreground="{StaticResource TextMuted}" FontFamily="Segoe UI" FontSize="10"/>
                                                     </StackPanel>
                                                 </StackPanel>
                                             </Border>
