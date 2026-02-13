@@ -66,6 +66,16 @@
         <SolidColorBrush x:Key="TextBrush"          Color="#D8EAF8"/>
         <SolidColorBrush x:Key="SubTextBrush"       Color="#6B9EC8"/>
 
+        <!-- Compatibility aliases for code-behind resource keys -->
+        <SolidColorBrush x:Key="CriticalBrush"      Color="#F04058"/>
+        <SolidColorBrush x:Key="WarningBrush"       Color="#F5A623"/>
+        <SolidColorBrush x:Key="PrimaryAccentBrush" Color="#06CFEE"/>
+        <SolidColorBrush x:Key="ProtocolArpBrush"   Color="#A78BFA"/>
+        <SolidColorBrush x:Key="ProtocolDnsBrush"   Color="#22D3EE"/>
+        <SolidColorBrush x:Key="ProtocolIpBrush"    Color="#60A5FA"/>
+        <SolidColorBrush x:Key="TextBrush"          Color="#D8EAF8"/>
+        <SolidColorBrush x:Key="SubTextBrush"       Color="#6B9EC8"/>
+
         <!-- Background gradients -->
         <LinearGradientBrush x:Key="AppGradient" StartPoint="0,0" EndPoint="1,1">
             <GradientStop Color="#F7FBFF" Offset="0"/>
