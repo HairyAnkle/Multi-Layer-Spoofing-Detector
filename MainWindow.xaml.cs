@@ -3,6 +3,8 @@ using Multi_Layer_Spoofing_Detector.data;
 using Multi_Layer_Spoofing_Detector.Models;
 using Multi_Layer_Spoofing_Detector.Risk;
 using Multi_Layer_Spoofing_Detector.Services;
+using LiveCharts;
+using LiveCharts.Wpf;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -48,12 +50,16 @@ namespace Multi_Layer_Spoofing_Detector
         private MLIntegration? _mlIntegration;
         private bool _isMlIntegrationReady;
         private readonly AppRuntimeSettings _settings;
+        private bool _isDarkMode = true;
+        private DateTime _captureStartTime = DateTime.Now;
 
         public MainWindow()
         {
             InitializeComponent();
             _settings = AppSettingsService.Load();
-            AutoRunCheckBox.IsChecked = _settings.AutoRunAfterUpload;
+            _settings.AutoRunAfterUpload = false;
+            AutoRunCheckBox.IsChecked = false;
+            ApplyTheme(_isDarkMode);
             InitializeTimers();
             InitializeMLIntegration();
             LoadRecentCases();
@@ -75,10 +81,10 @@ namespace Multi_Layer_Spoofing_Detector
                     _settings.AnalysisTimeoutMs);
                 _isMlIntegrationReady = true;
 
-                AnalysisModuleDetails.Text = "✓ Docker ML Engine ready";
+                AnalysisModuleDetails.Text = preflight.Message;
                 AnalysisModuleDetails.Foreground =
                     (SolidColorBrush)FindResource("SafeBrush");
-                OperationalStatusText.Text = preflight.Message;
+                OperationalStatusText.Text = "● Platform ready — no active analysis";
                 AppLogger.Info("Environment preflight passed.");
             }
             catch (Exception ex)
@@ -89,7 +95,8 @@ namespace Multi_Layer_Spoofing_Detector
                     (SolidColorBrush)FindResource("CriticalBrush");
 
                 AnalyzeBtn.IsEnabled = false;
-                OperationalStatusText.Text = ex.Message;
+                OperationalStatusText.Text = "● Environment check failed";
+                AnalysisModuleDetails.Text = ex.Message;
                 AppLogger.Error($"Environment preflight failed: {ex.Message}");
 
                 DialogService.ShowError(
@@ -163,47 +170,48 @@ namespace Multi_Layer_Spoofing_Detector
 
         private void UpdateNetworkStatus()
         {
-            string statusIcon;
             SolidColorBrush statusColor;
-
-            switch (_currentNetworkStatus)
+            if (_currentCvssScore >= 9.0)
             {
-                case "CRITICAL":
-                    statusIcon = "🚨";
-                    statusColor = (SolidColorBrush)FindResource("CriticalBrush");
-                    break;
-
-                case "HIGH":
-                    statusIcon = "⚠️";
-                    statusColor = (SolidColorBrush)FindResource("CriticalBrush");
-                    break;
-
-                case "MEDIUM":
-                    statusIcon = "⚠️";
-                    statusColor = (SolidColorBrush)FindResource("WarningBrush");
-                    break;
-
-                case "LOW":
-                    statusIcon = "🟡";
-                    statusColor = (SolidColorBrush)FindResource("WarningBrush");
-                    break;
-
-                default:
-                    statusIcon = "✅";
-                    statusColor = (SolidColorBrush)FindResource("SafeBrush");
-                    break;
+                statusColor = (SolidColorBrush)FindResource("CriticalBrush");
+            }
+            else if (_currentCvssScore >= 7.0)
+            {
+                statusColor = (SolidColorBrush)FindResource("WarningBrush");
+            }
+            else
+            {
+                statusColor = (SolidColorBrush)FindResource("SafeBrush");
             }
 
-            NetworkStatusText.Text = _currentNetworkStatus;
-            NetworkStatusIcon.Text = statusIcon;
+            NetworkStatusText.Text = $"{_currentCvssScore:0.0}";
+            NetworkStatusIcon.Text = "●";
             NetworkStatusIndicator.Background = statusColor;
 
             CvssScoreText.Text = $"{_currentCvssScore:0.0}";
-            CvssRatingText.Text = _currentCvssRating;
+            CvssRatingText.Text = string.Empty;
+            NetworkRiskBadge.Text = "● CVSS-based network risk index";
 
             MitreBullets.ItemsSource = _currentMitreTechniques ?? new List<string> { "No findings" };
 
-            LastScanText.Text = $"Last scan: {_lastAnalysisTime:HH:mm:ss}";
+            LastScanText.Text = _lastAnalysisTime == default ? "Last scan: —" : $"Last scan: {_lastAnalysisTime:HH:mm:ss}";
+            UpdateCvssLevelIndicators();
+        }
+
+        private void UpdateCvssLevelIndicators()
+        {
+            SetCvssLevelOpacity("CvssLevelLow", _currentCvssScore > 0 ? 1.0 : 0.35);
+            SetCvssLevelOpacity("CvssLevelMedium", _currentCvssScore >= 4.0 ? 1.0 : 0.35);
+            SetCvssLevelOpacity("CvssLevelHigh", _currentCvssScore >= 7.0 ? 1.0 : 0.35);
+            SetCvssLevelOpacity("CvssLevelCritical", _currentCvssScore >= 9.0 ? 1.0 : 0.35);
+        }
+
+        private void SetCvssLevelOpacity(string elementName, double opacity)
+        {
+            if (FindName(elementName) is Border levelBorder)
+            {
+                levelBorder.Opacity = opacity;
+            }
         }
 
         #endregion        
@@ -245,6 +253,7 @@ namespace Multi_Layer_Spoofing_Detector
                 }
 
                 _currentPcapFilePath = selectedPath;
+                _captureStartTime = DateTime.Now;
                 FileInfo fileInfo = new FileInfo(_currentPcapFilePath);
 
                 long maxBytes = (long)_settings.MaxPcapSizeMb * 1024 * 1024;
@@ -280,6 +289,9 @@ namespace Multi_Layer_Spoofing_Detector
 
                 AnalyzeBtn.IsEnabled = true;
 
+                ReportModuleStatus.Text = "⏸  PCAP uploaded. Run the pipeline to enable reports.";
+                ReportModuleStatus.Foreground = (SolidColorBrush)FindResource("WarningBrush");
+
                 DialogService.ShowSuccess(
                     this,
                     "File Upload",
@@ -288,10 +300,6 @@ namespace Multi_Layer_Spoofing_Detector
 
                 AppLogger.Info($"PCAP uploaded: {_currentPcapFilePath}");
 
-                if (_settings.AutoRunAfterUpload)
-                {
-                    AnalyzeBtn_Click(this, new RoutedEventArgs());
-                }
             }
 
             catch (Exception ex)
@@ -396,18 +404,14 @@ namespace Multi_Layer_Spoofing_Detector
                 DetectionModuleStatus.Text = "Status: Detection Complete";
                 DetectionModuleStatus.Foreground = (SolidColorBrush)FindResource("SafeBrush");
 
-                ArpDetectionIndicator.Fill = (_analysisResults.Any(r => r.Category == "ARP" && r.RiskLevel != "Low")) ?
-                    (SolidColorBrush)FindResource("CriticalBrush") : (SolidColorBrush)FindResource("ProtocolArpBrush");
-                DnsDetectionIndicator.Fill = (_analysisResults.Any(r => r.Category == "DNS" && r.RiskLevel != "Low")) ?
-                    (SolidColorBrush)FindResource("WarningBrush") : (SolidColorBrush)FindResource("ProtocolDnsBrush");
-                IpDetectionIndicator.Fill = (_analysisResults.Any(r => r.Category == "IP" && r.RiskLevel != "Low")) ?
-                    (SolidColorBrush)FindResource("WarningBrush") : (SolidColorBrush)FindResource("ProtocolIpBrush");
-
+                UpdateDetectionLayerStatus();
                 UpdateAlertsDisplay();
 
                 UpdateNetworkStatus();
                 UpdateAnalysisResultsDisplay();
                 UpdateReportSummary();
+                ReportModuleStatus.Text = $"✓ Analysis run complete. Case: {_currentCaseId} | Findings: {_analysisResults.Count}";
+                ReportModuleStatus.Foreground = (SolidColorBrush)FindResource("SafeBrush");
 
                 AnalyzeBtn.IsEnabled = true;
 
@@ -670,7 +674,7 @@ namespace Multi_Layer_Spoofing_Detector
         private void RunPreflightCheckBtn_Click(object sender, RoutedEventArgs e)
         {
             var preflight = RunPreflightCheck();
-            OperationalStatusText.Text = preflight.Message;
+            AnalysisModuleDetails.Text = preflight.Message;
 
             if (preflight.Ok)
             {
@@ -680,6 +684,7 @@ namespace Multi_Layer_Spoofing_Detector
                     _settings.AnalysisTimeoutMs);
                 _isMlIntegrationReady = true;
                 AnalyzeBtn.IsEnabled = true;
+                OperationalStatusText.Text = "● Platform ready — no active analysis";
                 DialogService.ShowSuccess(this, "Preflight Check", "Environment is ready.");
                 AppLogger.Info("Manual preflight check passed.");
             }
@@ -687,6 +692,7 @@ namespace Multi_Layer_Spoofing_Detector
             {
                 _isMlIntegrationReady = false;
                 AnalyzeBtn.IsEnabled = false;
+                OperationalStatusText.Text = "● Environment check failed";
                 DialogService.ShowWarning(this, "Preflight Check", preflight.Message);
                 AppLogger.Error($"Manual preflight check failed: {preflight.Message}");
             }
@@ -694,9 +700,31 @@ namespace Multi_Layer_Spoofing_Detector
 
         private void AutoRunCheckBox_Changed(object sender, RoutedEventArgs e)
         {
-            _settings.AutoRunAfterUpload = AutoRunCheckBox.IsChecked == true;
+            _settings.AutoRunAfterUpload = false;
+            AutoRunCheckBox.IsChecked = false;
             AppSettingsService.Save(_settings);
-            AppLogger.Info($"AutoRunAfterUpload changed to: {_settings.AutoRunAfterUpload}");
+            AppLogger.Info("Auto-run after upload is disabled; manual pipeline execution required.");
+        }
+
+        private void ThemeToggleButton_Click(object sender, RoutedEventArgs e)
+        {
+            _isDarkMode = !_isDarkMode;
+            ApplyTheme(_isDarkMode);
+        }
+
+        private void ApplyTheme(bool darkMode)
+        {
+            var legendBg = (Color)ColorConverter.ConvertFromString(darkMode ? "#091628" : "#EAF2FB");
+            var legendBorder = (Color)ColorConverter.ConvertFromString(darkMode ? "#1A3355" : "#B8CCE4");
+            var contentBg = (Color)ColorConverter.ConvertFromString(darkMode ? "#00000000" : "#F7FBFF");
+
+            LegendBarBorder.Background = new SolidColorBrush(legendBg);
+            LegendBarBorder.BorderBrush = new SolidColorBrush(legendBorder);
+            MainContentGrid.Background = new SolidColorBrush(contentBg);
+            MainContentScrollViewer.Background = new SolidColorBrush(contentBg);
+
+            ThemeToggleButton.Content = darkMode ? "☀ Light" : "🌙 Dark";
+            AppLogger.Info($"Theme switched to {(darkMode ? "dark" : "light")} mode.");
         }
 
         private void ExportEvidenceBundleBtn_Click(object sender, RoutedEventArgs e)
@@ -790,18 +818,126 @@ namespace Multi_Layer_Spoofing_Detector
 
         #region UI Update Methods
 
+        private void UpdateDetectionLayerStatus()
+        {
+            int arpFindings = _analysisResults.Count(r => r.Category == "ARP" && r.RiskLevel != "Low");
+            int dnsFindings = _analysisResults.Count(r => r.Category == "DNS" && r.RiskLevel != "Low");
+            int ipFindings = _analysisResults.Count(r => r.Category == "IP" && r.RiskLevel != "Low");
+
+            ArpThreatCount.Text = arpFindings.ToString();
+            DnsThreatCount.Text = dnsFindings.ToString();
+            IpThreatCount.Text = ipFindings.ToString();
+
+            ArpLayerStatus.Text = arpFindings > 0 ? "ANOMALY" : "NORMAL";
+            DnsLayerStatus.Text = dnsFindings > 0 ? "ANOMALY" : "NORMAL";
+            IpLayerStatus.Text = ipFindings > 0 ? "ANOMALY" : "NORMAL";
+
+            ArpDetectionIndicator.Fill = arpFindings > 0
+                ? (SolidColorBrush)FindResource("CriticalBrush")
+                : (SolidColorBrush)FindResource("ProtocolArpBrush");
+            DnsDetectionIndicator.Fill = dnsFindings > 0
+                ? (SolidColorBrush)FindResource("CriticalBrush")
+                : (SolidColorBrush)FindResource("ProtocolDnsBrush");
+            IpDetectionIndicator.Fill = ipFindings > 0
+                ? (SolidColorBrush)FindResource("CriticalBrush")
+                : (SolidColorBrush)FindResource("ProtocolIpBrush");
+        }
+
         private void UpdateReportSummary()
         {
-            TotalThreatsText.Text = _threatAlerts.Count.ToString();
-            CriticalAlertsText.Text = _threatAlerts.Count(a => a.Severity == "Critical").ToString();
-            PacketsAnalyzedText.Text = _reports.Any() ? _reports[0].PacketsAnalyzed.ToString("N0") : "0";
-
+            int packets = _reports.Any() ? _reports[0].PacketsAnalyzed : 0;
             int critical = _threatAlerts.Count(a => a.Severity == "Critical");
             int warnings = _threatAlerts.Count(a => a.Severity == "Warning");
+            var elapsedSeconds = Math.Max(1, (_lastAnalysisTime == default ? 1 : (_lastAnalysisTime - _captureStartTime).TotalSeconds));
+            var avgPktRate = packets / elapsedSeconds;
+
+            TotalThreatsText.Text = $"{_threatAlerts.Count} threats detected";
+            CriticalAlertsText.Text = critical.ToString();
+            PacketsAnalyzedText.Text = packets.ToString("N0");
+            PktRateText.Text = $"{avgPktRate:0.#} pkt/s avg";
+
             InsightsText.Text =
-                $"Current CV Score: {_currentCvssScore:0.0}. " +
+                $"Current CVSS score: {_currentCvssScore:0.0}. " +
                 $"Detected alerts: {critical} critical, {warnings} warning. " +
                 "Action: prioritize high-confidence anomalies and export evidence bundle for documentation.";
+
+            UpdateAnalyticsVisuals(packets, avgPktRate, critical, warnings);
+        }
+
+        private void UpdateAnalyticsVisuals(int packets, double avgPktRate, int critical, int warnings)
+        {
+            int arpAnomalies = _analysisResults.Count(r => r.Category.Equals("ARP", StringComparison.OrdinalIgnoreCase) && r.RiskLevel != "Low");
+            int dnsAnomalies = _analysisResults.Count(r => r.Category.Equals("DNS", StringComparison.OrdinalIgnoreCase) && r.RiskLevel != "Low");
+            int ipAnomalies = _analysisResults.Count(r => r.Category.Equals("IP", StringComparison.OrdinalIgnoreCase) && r.RiskLevel != "Low");
+
+            var uniqueIps = _threatAlerts.Select(a => a.IpAddress).Where(ip => !string.IsNullOrWhiteSpace(ip) && ip != "System").Distinct().Count();
+            var captureMinutes = Math.Max(1, (_lastAnalysisTime == default ? 1 : (_lastAnalysisTime - _captureStartTime).TotalMinutes));
+
+            StatAvgPktRate.Text = avgPktRate.ToString("0.#");
+            StatUniqueIPs.Text = uniqueIps.ToString("N0");
+            StatArpAnomalies.Text = arpAnomalies.ToString();
+            StatDnsAnomalies.Text = dnsAnomalies.ToString();
+            StatIpAnomalies.Text = ipAnomalies.ToString();
+            StatCaptureMins.Text = captureMinutes.ToString("0");
+
+            ThreatTimelineChart.Series = new SeriesCollection
+            {
+                new LineSeries
+                {
+                    Title = "Total",
+                    Values = new ChartValues<int> { Math.Max(0, packets / 5), Math.Max(0, packets / 4), Math.Max(0, packets / 3), Math.Max(0, packets / 2), packets },
+                    Stroke = (SolidColorBrush)FindResource("InfoBrush"),
+                    Fill = Brushes.Transparent,
+                    PointGeometry = null
+                },
+                new LineSeries
+                {
+                    Title = "Flagged",
+                    Values = new ChartValues<int> { Math.Max(0, (critical + warnings) / 5), Math.Max(0, (critical + warnings) / 4), Math.Max(0, (critical + warnings) / 3), Math.Max(0, (critical + warnings) / 2), critical + warnings },
+                    Stroke = (SolidColorBrush)FindResource("CritBrush"),
+                    Fill = Brushes.Transparent,
+                    PointGeometry = null
+                }
+            };
+            TimelineAxisX.Labels = new[] { "-4", "-3", "-2", "-1", "now" };
+
+            int arpTotal = _analysisResults.Count(r => r.Category == "ARP");
+            int dnsTotal = _analysisResults.Count(r => r.Category == "DNS");
+            int ipTotal = _analysisResults.Count(r => r.Category == "IP");
+            int protocolTotal = Math.Max(1, arpTotal + dnsTotal + ipTotal);
+
+            ArpPctText.Text = $"{(arpTotal * 100.0 / protocolTotal):0.#}%";
+            DnsPctText.Text = $"{(dnsTotal * 100.0 / protocolTotal):0.#}%";
+            IpPctText.Text = $"{(ipTotal * 100.0 / protocolTotal):0.#}%";
+
+            ProtocolPieChart.Series = new SeriesCollection
+            {
+                new PieSeries { Title = "ARP", Values = new ChartValues<double> { Math.Max(0, arpTotal) }, Fill = (SolidColorBrush)FindResource("ArpBrush"), DataLabels = false },
+                new PieSeries { Title = "DNS", Values = new ChartValues<double> { Math.Max(0, dnsTotal) }, Fill = (SolidColorBrush)FindResource("DnsBrush"), DataLabels = false },
+                new PieSeries { Title = "IP", Values = new ChartValues<double> { Math.Max(0, ipTotal) }, Fill = (SolidColorBrush)FindResource("IpBrush"), DataLabels = false }
+            };
+
+            PacketFlowChart.Series = new SeriesCollection
+            {
+                new ColumnSeries { Title = "ARP", Values = new ChartValues<int> { arpAnomalies }, Fill = (SolidColorBrush)FindResource("ArpBrush") },
+                new ColumnSeries { Title = "DNS", Values = new ChartValues<int> { dnsAnomalies }, Fill = (SolidColorBrush)FindResource("DnsBrush") },
+                new ColumnSeries { Title = "IP", Values = new ChartValues<int> { ipAnomalies }, Fill = (SolidColorBrush)FindResource("IpBrush") }
+            };
+
+            var av = Math.Min(10, _currentCvssScore * 0.9);
+            var ac = Math.Min(10, 10 - (_currentCvssScore * 0.5));
+            var imp = Math.Min(10, _currentCvssScore);
+            var exp = Math.Min(10, _currentCvssScore * 0.8);
+
+            CvssAvText.Text = av.ToString("0.0");
+            CvssAcText.Text = ac.ToString("0.0");
+            CvssImpText.Text = imp.ToString("0.0");
+            CvssExpText.Text = exp.ToString("0.0");
+
+            CvssAvBar.Width = av * 12;
+            CvssAcBar.Width = ac * 12;
+            CvssImpBar.Width = imp * 12;
+            CvssExpBar.Width = exp * 12;
         }
 
         private void UpdateAlertsDisplay()
@@ -817,14 +953,6 @@ namespace Multi_Layer_Spoofing_Detector
 
         private Border CreateAlertUI(ThreatAlert alert)
         {
-            string backgroundColor = alert.Severity switch
-            {
-                "Critical" => "#4A2C2A",
-                "Warning" => "#4A3C2A",
-                "Safe" => "#2A4A2A",
-                _ => "#333344"
-            };
-
             string borderColor = alert.Severity switch
             {
                 "Critical" => "CriticalBrush",
@@ -835,7 +963,7 @@ namespace Multi_Layer_Spoofing_Detector
 
             var border = new Border
             {
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(backgroundColor)),
+                Background = (SolidColorBrush)FindResource("BgBase"),
                 BorderBrush = (SolidColorBrush)FindResource(borderColor),
                 BorderThickness = new Thickness(2),
                 CornerRadius = new CornerRadius(8),
@@ -933,14 +1061,6 @@ namespace Multi_Layer_Spoofing_Detector
         }
         private Border CreateAnalysisResultUI(AnalysisResult result)
         {
-            string backgroundColor = result.RiskLevel switch
-            {
-                "High" => "#4A2C2A",
-                "Medium" => "#4A3C2A",
-                "Low" => "#2A4A2A",
-                _ => "#333344"
-            };
-
             string riskIcon = result.RiskLevel switch
             {
                 "High" => "🔴",
@@ -960,7 +1080,13 @@ namespace Multi_Layer_Spoofing_Detector
 
             var border = new Border
             {
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(backgroundColor)),
+                Background = (SolidColorBrush)FindResource("BgBase"),
+                BorderBrush = result.RiskLevel == "High"
+                    ? (SolidColorBrush)FindResource("CriticalBrush")
+                    : result.RiskLevel == "Medium"
+                        ? (SolidColorBrush)FindResource("WarningBrush")
+                        : (SolidColorBrush)FindResource("SafeBrush"),
+                BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(8),
                 Padding = new Thickness(12),
                 Margin = new Thickness(0, 4, 0, 0)
@@ -1022,11 +1148,13 @@ namespace Multi_Layer_Spoofing_Detector
                 : 0;
             string riskClass = risk.Rating.ToLowerInvariant(); 
 
+            double AlertCvss(ThreatAlert a) => a.Severity == "Critical" ? 9.2 : (a.Severity == "Warning" ? 6.4 : 2.8);
+
             string threatRows = threatAlerts.Any()
                 ? string.Join("", threatAlerts.Select(alert => $@"
 <tr>
     <td>{alert.Timestamp:yyyy-MM-dd HH:mm:ss}</td>
-    <td><span class='badge sev-{HtmlSafe(alert.Severity.ToLower())}'>{HtmlSafe(alert.Severity)}</span></td>
+    <td>{AlertCvss(alert):0.0}</td>
     <td>{HtmlSafe(alert.Type)}</td>
     <td>{HtmlSafe(alert.IpAddress)}</td>
     <td>{HtmlSafe(alert.Description)}<br/><small>{HtmlSafe(alert.AdditionalInfo)}</small></td>
@@ -1106,11 +1234,9 @@ body {{ font-family: Segoe UI; background:#f5f5f5; padding:20px; }}
 </table>
 
 <div class='riskbox'>
-  <p class='riskTitle'>System Risk (CVSS + MITRE)</p>
+  <p class='riskTitle'>System Risk (CVSS Score)</p>
   <div class='riskScore'>
-    <span class='badge cvss-{riskClass}'>{HtmlSafe(risk.Rating)}</span>
-    &nbsp;
-    <span class='scoreBadge cvss-{riskClass}'>Score: {risk.Score:0.0}</span>
+    <span class='scoreBadge cvss-{riskClass}'>CVSS Score: {risk.Score:0.0}</span>
   </div>
   <div style='margin-top:10px;'>
     <b>Summary</b>
@@ -1126,18 +1252,19 @@ body {{ font-family: Segoe UI; background:#f5f5f5; padding:20px; }}
 
 <h2>Executive Summary</h2>
 <div class='cards'>
-  <div class='card critical'><b>Critical</b><br/>{criticalCount}</div>
-  <div class='card warning'><b>Warning</b><br/>{warningCount}</div>
+  <div class='card'><b>CVSS Score</b><br/>{risk.Score:0.0}</div>
+  <div class='card'><b>Total Threats</b><br/>{threatAlerts.Count}</div>
   <div class='card'><b>Flows</b><br/>{totalPackets:N0}</div>
   <div class='card safe'><b>Confidence</b><br/>{avgConfidence}%</div>
 </div>
+<p><b>CVSS Rating Legend:</b> Low 0.1-3.9 | Medium 4.0-6.9 | High 7.0-8.9 | Critical 9.0-10.0</p>
 
 <h2>Detected Threat Alerts</h2>
 <table class='table'>
 <thead>
 <tr>
   <th>Timestamp</th>
-  <th>Severity</th>
+  <th>CVSS Score</th>
   <th>Type</th>
   <th>Source IP</th>
   <th>Description</th>
@@ -1194,16 +1321,17 @@ body {{ font-family: Segoe UI; background:#f5f5f5; padding:20px; }}
                     SystemRisk = new
                     {
                         CvssScore = risk.Score,
-                        CvssRating = risk.Rating,
+                        CvssRatingLegend = "Low 0.1-3.9 | Medium 4.0-6.9 | High 7.0-8.9 | Critical 9.0-10.0",
                         Summary = risk.SummaryBullets,
                         MitreAttack = risk.MitreItems
                     },
 
                     ExecutiveSummary = new
                     {
+                        CvssScore = risk.Score,
                         TotalThreats = threatAlerts.Count,
-                        CriticalThreats = threatAlerts.Count(a => a.Severity == "Critical"),
-                        WarningThreats = threatAlerts.Count(a => a.Severity == "Warning"),
+                        TotalFlows = caseMeta.PacketsAnalyzed,
+                        CvssRatingLegend = "Low 0.1-3.9 | Medium 4.0-6.9 | High 7.0-8.9 | Critical 9.0-10.0",
                         AverageConfidence = analysisResults.Any()
                             ? Math.Round(analysisResults.Average(r => r.Confidence), 2)
                             : 0
@@ -1212,7 +1340,7 @@ body {{ font-family: Segoe UI; background:#f5f5f5; padding:20px; }}
                     ThreatAlerts = threatAlerts.Select(a => new
                     {
                         Timestamp = a.Timestamp.ToString("yyyy-MM-dd HH:mm:ss"),
-                        a.Severity,
+                        CvssScore = a.Severity == "Critical" ? 9.2 : (a.Severity == "Warning" ? 6.4 : 2.8),
                         a.Type,
                         a.IpAddress,
                         a.Description,
