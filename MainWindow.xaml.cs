@@ -745,22 +745,38 @@ namespace Multi_Layer_Spoofing_Detector
                     ["TitleBarGradientEnd"] = "#D8E6F4"
                 };
 
-            foreach (var item in palette)
+            foreach (var item in palette.Where(p => p.Key != "TitleBarGradientStart" && p.Key != "TitleBarGradientEnd"))
             {
-                if (item.Key.StartsWith("TitleBarGradient") && FindResource("TitleBarGradient") is LinearGradientBrush gradient)
+                var color = (Color)ColorConverter.ConvertFromString(item.Value);
+                if (Resources[item.Key] is SolidColorBrush existingBrush && !existingBrush.IsFrozen)
                 {
-                    if (gradient.GradientStops.Count >= 2)
-                    {
-                        gradient.GradientStops[0].Color = (Color)ColorConverter.ConvertFromString(palette["TitleBarGradientStart"]);
-                        gradient.GradientStops[1].Color = (Color)ColorConverter.ConvertFromString(palette["TitleBarGradientEnd"]);
-                    }
-                    continue;
+                    existingBrush.Color = color;
                 }
+                else
+                {
+                    Resources[item.Key] = new SolidColorBrush(color);
+                }
+            }
 
-                if (FindResource(item.Key) is SolidColorBrush brush)
-                {
-                    brush.Color = (Color)ColorConverter.ConvertFromString(item.Value);
-                }
+            var gradientStart = (Color)ColorConverter.ConvertFromString(palette["TitleBarGradientStart"]);
+            var gradientEnd = (Color)ColorConverter.ConvertFromString(palette["TitleBarGradientEnd"]);
+            if (Resources["TitleBarGradient"] is LinearGradientBrush existingGradient &&
+                !existingGradient.IsFrozen &&
+                existingGradient.GradientStops.Count >= 2)
+            {
+                existingGradient.GradientStops[0].Color = gradientStart;
+                existingGradient.GradientStops[1].Color = gradientEnd;
+            }
+            else
+            {
+                Resources["TitleBarGradient"] = new LinearGradientBrush(
+                    new GradientStopCollection
+                    {
+                        new GradientStop(gradientStart, 0),
+                        new GradientStop(gradientEnd, 1)
+                    },
+                    new Point(0, 0),
+                    new Point(1, 0));
             }
 
             ThemeToggleButton.Content = darkMode ? "☀ Light" : "🌙 Dark";
