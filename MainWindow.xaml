@@ -1548,59 +1548,36 @@
                                     <StackPanel>
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
                                             <TextBlock Text="🗂" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                            <TextBlock Text="Recent Cases" Style="{StaticResource TitleStyle}" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Summary Snapshot" Style="{StaticResource TitleStyle}" VerticalAlignment="Center"/>
                                         </StackPanel>
-                                        <TextBlock Text="Previous analysis sessions. Color indicates severity of findings."
+                                        <TextBlock Text="Quick overview of key results (displayed downward under Live Alerts)."
                                                    Style="{StaticResource SubTitleStyle}"/>
-                                        <ListBox x:Name="RecentCasesList"
-                                                 Background="Transparent"
-                                                 BorderThickness="0"
-                                                 Foreground="{StaticResource TextPrimary}"
-                                                 Margin="0,0,0,0"
-                                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                                            <ListBox.ItemTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Text="{Binding}" Foreground="{StaticResource TextPrimary}" FontFamily="Consolas" FontSize="11" TextWrapping="Wrap"/>
-                                                </DataTemplate>
-                                            </ListBox.ItemTemplate>
-                                            <ListBox.ItemContainerStyle>
-                                                <Style TargetType="ListBoxItem">
-                                                    <Setter Property="Background"   Value="Transparent"/>
-                                                    <Setter Property="BorderThickness" Value="0"/>
-                                                    <Setter Property="Padding"      Value="0"/>
-                                                    <Setter Property="Margin"       Value="0,0,0,5"/>
-                                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                                                    <Setter Property="Template">
-                                                        <Setter.Value>
-                                                            <ControlTemplate TargetType="ListBoxItem">
-                                                                <Border x:Name="ItemBorder"
-                                                                        Background="{StaticResource BgBase}"
-                                                                        CornerRadius="8" Padding="10,8"
-                                                                        BorderBrush="{StaticResource BorderNormal}"
-                                                                        BorderThickness="1">
-                                                                    <ContentPresenter/>
-                                                                </Border>
-                                                                <ControlTemplate.Triggers>
-                                                                    <Trigger Property="IsMouseOver" Value="True">
-                                                                        <Setter TargetName="ItemBorder" Property="BorderBrush" Value="{StaticResource BorderBright}"/>
-                                                                    </Trigger>
-                                                                    <Trigger Property="IsSelected" Value="True">
-                                                                        <Setter TargetName="ItemBorder" Property="Background" Value="{StaticResource BgCardSoft}"/>
-                                                                    </Trigger>
-                                                                </ControlTemplate.Triggers>
-                                                            </ControlTemplate>
-                                                        </Setter.Value>
-                                                    </Setter>
-                                                </Style>
-                                            </ListBox.ItemContainerStyle>
-                                        </ListBox>
-                                        <Button Content="↻  Refresh"
-                                                Click="RefreshRecentCasesBtn_Click"
-                                                Background="#1A2C4A"
-                                                Foreground="{StaticResource TextPrimary}"
-                                                Style="{StaticResource GhostBtnStyle}"
-                                                HorizontalAlignment="Stretch"
-                                                Margin="0,6,0,0"/>
+                                        <StackPanel>
+                                            <Border Background="{StaticResource BgBase}" BorderBrush="{StaticResource BorderNormal}" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,6">
+                                                <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                    <TextBlock Text="Overall Network Risk" Foreground="{StaticResource TextSecondary}" FontFamily="Segoe UI" FontSize="11"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Text, ElementName=NetworkStatusText}" Foreground="{StaticResource TextPrimary}" FontFamily="Consolas" FontSize="12" FontWeight="Bold"/>
+                                                </Grid>
+                                            </Border>
+                                            <Border Background="{StaticResource BgBase}" BorderBrush="{StaticResource BorderNormal}" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,6">
+                                                <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                    <TextBlock Text="CVSS v3 Score" Foreground="{StaticResource TextSecondary}" FontFamily="Segoe UI" FontSize="11"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Text, ElementName=CvssScoreText}" Foreground="{StaticResource TextPrimary}" FontFamily="Consolas" FontSize="12" FontWeight="Bold"/>
+                                                </Grid>
+                                            </Border>
+                                            <Border Background="{StaticResource BgBase}" BorderBrush="{StaticResource BorderNormal}" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,6">
+                                                <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                    <TextBlock Text="Packets Analyzed" Foreground="{StaticResource TextSecondary}" FontFamily="Segoe UI" FontSize="11"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Text, ElementName=PacketsAnalyzedText}" Foreground="{StaticResource TextPrimary}" FontFamily="Consolas" FontSize="12" FontWeight="Bold"/>
+                                                </Grid>
+                                            </Border>
+                                            <Border Background="{StaticResource BgBase}" BorderBrush="{StaticResource BorderNormal}" BorderThickness="1" CornerRadius="8" Padding="10">
+                                                <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                    <TextBlock Text="Critical Alerts" Foreground="{StaticResource TextSecondary}" FontFamily="Segoe UI" FontSize="11"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Text, ElementName=CriticalAlertsText}" Foreground="{StaticResource TextPrimary}" FontFamily="Consolas" FontSize="12" FontWeight="Bold"/>
+                                                </Grid>
+                                            </Border>
+                                        </StackPanel>
                                     </StackPanel>
                                 </Border>
 
@@ -1885,6 +1862,62 @@
                                               Checked="AutoRunCheckBox_Changed"
                                               Unchecked="AutoRunCheckBox_Changed"
                                               Style="{StaticResource ToggleStyle}"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="1" Style="{StaticResource CardStyle}" Margin="0,12,0,0">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                        <TextBlock Text="🗂" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Recent Cases" Style="{StaticResource TitleStyle}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <TextBlock Text="Previous analysis sessions with computed CVSS score."
+                                               Style="{StaticResource SubTitleStyle}"/>
+                                    <ListBox x:Name="RecentCasesList"
+                                             Background="Transparent"
+                                             BorderThickness="0"
+                                             Foreground="{StaticResource TextPrimary}"
+                                             Margin="0,0,0,0"
+                                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding}" Foreground="{StaticResource TextPrimary}" FontFamily="Consolas" FontSize="11" TextWrapping="Wrap"/>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                        <ListBox.ItemContainerStyle>
+                                            <Style TargetType="ListBoxItem">
+                                                <Setter Property="Background" Value="Transparent"/>
+                                                <Setter Property="BorderThickness" Value="0"/>
+                                                <Setter Property="Padding" Value="0"/>
+                                                <Setter Property="Margin" Value="0,0,0,5"/>
+                                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="ListBoxItem">
+                                                            <Border x:Name="ItemBorder" Background="{StaticResource BgBase}" CornerRadius="8" Padding="10,8" BorderBrush="{StaticResource BorderNormal}" BorderThickness="1">
+                                                                <ContentPresenter/>
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                    <Setter TargetName="ItemBorder" Property="BorderBrush" Value="{StaticResource BorderBright}"/>
+                                                                </Trigger>
+                                                                <Trigger Property="IsSelected" Value="True">
+                                                                    <Setter TargetName="ItemBorder" Property="Background" Value="{StaticResource BgCardSoft}"/>
+                                                                </Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </ListBox.ItemContainerStyle>
+                                    </ListBox>
+                                    <Button Content="↻  Refresh"
+                                            Click="RefreshRecentCasesBtn_Click"
+                                            Background="#1A2C4A"
+                                            Foreground="{StaticResource TextPrimary}"
+                                            Style="{StaticResource GhostBtnStyle}"
+                                            HorizontalAlignment="Stretch"
+                                            Margin="0,6,0,0"/>
                                 </StackPanel>
                             </Border>
                         </Grid>
