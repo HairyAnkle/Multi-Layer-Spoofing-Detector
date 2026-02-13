@@ -3,6 +3,8 @@ using Multi_Layer_Spoofing_Detector.data;
 using Multi_Layer_Spoofing_Detector.Models;
 using Multi_Layer_Spoofing_Detector.Risk;
 using Multi_Layer_Spoofing_Detector.Services;
+using LiveCharts;
+using LiveCharts.Wpf;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -49,6 +51,7 @@ namespace Multi_Layer_Spoofing_Detector
         private bool _isMlIntegrationReady;
         private readonly AppRuntimeSettings _settings;
         private bool _isDarkMode = true;
+        private DateTime _captureStartTime = DateTime.Now;
 
         public MainWindow()
         {
@@ -167,47 +170,40 @@ namespace Multi_Layer_Spoofing_Detector
 
         private void UpdateNetworkStatus()
         {
-            string statusIcon;
             SolidColorBrush statusColor;
-
-            switch (_currentNetworkStatus)
+            if (_currentCvssScore >= 9.0)
             {
-                case "CRITICAL":
-                    statusIcon = "🚨";
-                    statusColor = (SolidColorBrush)FindResource("CriticalBrush");
-                    break;
-
-                case "HIGH":
-                    statusIcon = "⚠️";
-                    statusColor = (SolidColorBrush)FindResource("CriticalBrush");
-                    break;
-
-                case "MEDIUM":
-                    statusIcon = "⚠️";
-                    statusColor = (SolidColorBrush)FindResource("WarningBrush");
-                    break;
-
-                case "LOW":
-                    statusIcon = "🟡";
-                    statusColor = (SolidColorBrush)FindResource("WarningBrush");
-                    break;
-
-                default:
-                    statusIcon = "✅";
-                    statusColor = (SolidColorBrush)FindResource("SafeBrush");
-                    break;
+                statusColor = (SolidColorBrush)FindResource("CriticalBrush");
+            }
+            else if (_currentCvssScore >= 7.0)
+            {
+                statusColor = (SolidColorBrush)FindResource("WarningBrush");
+            }
+            else
+            {
+                statusColor = (SolidColorBrush)FindResource("SafeBrush");
             }
 
-            NetworkStatusText.Text = _currentNetworkStatus;
-            NetworkStatusIcon.Text = statusIcon;
+            NetworkStatusText.Text = $"{_currentCvssScore:0.0}";
+            NetworkStatusIcon.Text = "●";
             NetworkStatusIndicator.Background = statusColor;
 
             CvssScoreText.Text = $"{_currentCvssScore:0.0}";
-            CvssRatingText.Text = _currentCvssRating;
+            CvssRatingText.Text = string.Empty;
+            NetworkRiskBadge.Text = "● CVSS-based network risk index";
 
             MitreBullets.ItemsSource = _currentMitreTechniques ?? new List<string> { "No findings" };
 
-            LastScanText.Text = $"Last scan: {_lastAnalysisTime:HH:mm:ss}";
+            LastScanText.Text = _lastAnalysisTime == default ? "Last scan: —" : $"Last scan: {_lastAnalysisTime:HH:mm:ss}";
+            UpdateCvssLevelIndicators();
+        }
+
+        private void UpdateCvssLevelIndicators()
+        {
+            CvssLevelLow.Opacity = _currentCvssScore > 0 ? 1.0 : 0.35;
+            CvssLevelMedium.Opacity = _currentCvssScore >= 4.0 ? 1.0 : 0.35;
+            CvssLevelHigh.Opacity = _currentCvssScore >= 7.0 ? 1.0 : 0.35;
+            CvssLevelCritical.Opacity = _currentCvssScore >= 9.0 ? 1.0 : 0.35;
         }
 
         #endregion        
@@ -249,6 +245,7 @@ namespace Multi_Layer_Spoofing_Detector
                 }
 
                 _currentPcapFilePath = selectedPath;
+                _captureStartTime = DateTime.Now;
                 FileInfo fileInfo = new FileInfo(_currentPcapFilePath);
 
                 long maxBytes = (long)_settings.MaxPcapSizeMb * 1024 * 1024;
@@ -727,60 +724,142 @@ namespace Multi_Layer_Spoofing_Detector
                     ["TextPrimary"] = "#D8EAF8",
                     ["TextSecondary"] = "#6B9EC8",
                     ["TextMuted"] = "#3A5D80",
+                    ["TextBrush"] = "#D8EAF8",
+                    ["SubTextBrush"] = "#6B9EC8",
+                    ["SafeBrush"] = "#0ED98D",
+                    ["WarnBrush"] = "#F5A623",
+                    ["CritBrush"] = "#F04058",
+                    ["InfoBrush"] = "#3B82F6",
+                    ["AccentBrush"] = "#06CFEE",
+                    ["ArpBrush"] = "#A78BFA",
+                    ["DnsBrush"] = "#22D3EE",
+                    ["IpBrush"] = "#60A5FA",
+                    ["CriticalBrush"] = "#F04058",
+                    ["WarningBrush"] = "#F5A623",
+                    ["PrimaryAccentBrush"] = "#06CFEE",
+                    ["ProtocolArpBrush"] = "#A78BFA",
+                    ["ProtocolDnsBrush"] = "#22D3EE",
+                    ["ProtocolIpBrush"] = "#60A5FA",
                     ["TitleBarGradientStart"] = "#091628",
                     ["TitleBarGradientEnd"] = "#0E1E33"
                 }
                 : new Dictionary<string, string>
                 {
-                    ["BgBase"] = "#F3F7FC",
-                    ["BgPanel"] = "#E8F0FA",
+                    ["BgBase"] = "#EEF4FB",
+                    ["BgPanel"] = "#E4EDF8",
                     ["BgCard"] = "#FFFFFF",
-                    ["BgCardSoft"] = "#F5F9FF",
-                    ["BorderNormal"] = "#C6D9EE",
-                    ["BorderBright"] = "#8CB3DC",
+                    ["BgCardSoft"] = "#F4F8FE",
+                    ["BorderNormal"] = "#B8CCE4",
+                    ["BorderBright"] = "#7EA7D3",
                     ["TextPrimary"] = "#102A43",
-                    ["TextSecondary"] = "#486581",
-                    ["TextMuted"] = "#829AB1",
-                    ["TitleBarGradientStart"] = "#E6EEF8",
-                    ["TitleBarGradientEnd"] = "#D8E6F4"
+                    ["TextSecondary"] = "#334E68",
+                    ["TextMuted"] = "#5B7C99",
+                    ["TextBrush"] = "#102A43",
+                    ["SubTextBrush"] = "#334E68",
+                    ["SafeBrush"] = "#0E9F6E",
+                    ["WarnBrush"] = "#C87C00",
+                    ["CritBrush"] = "#C62845",
+                    ["InfoBrush"] = "#1F67D8",
+                    ["AccentBrush"] = "#0A8FC7",
+                    ["ArpBrush"] = "#7B61D1",
+                    ["DnsBrush"] = "#1388B5",
+                    ["IpBrush"] = "#2A6CCF",
+                    ["CriticalBrush"] = "#C62845",
+                    ["WarningBrush"] = "#C87C00",
+                    ["PrimaryAccentBrush"] = "#0A8FC7",
+                    ["ProtocolArpBrush"] = "#7B61D1",
+                    ["ProtocolDnsBrush"] = "#1388B5",
+                    ["ProtocolIpBrush"] = "#2A6CCF",
+                    ["TitleBarGradientStart"] = "#DCE8F7",
+                    ["TitleBarGradientEnd"] = "#CFE0F3"
                 };
 
             foreach (var item in palette.Where(p => p.Key != "TitleBarGradientStart" && p.Key != "TitleBarGradientEnd"))
             {
-                var color = (Color)ColorConverter.ConvertFromString(item.Value);
-                if (Resources[item.Key] is SolidColorBrush existingBrush && !existingBrush.IsFrozen)
-                {
-                    existingBrush.Color = color;
-                }
-                else
-                {
-                    Resources[item.Key] = new SolidColorBrush(color);
-                }
+                SetThemeBrush(item.Key, (Color)ColorConverter.ConvertFromString(item.Value));
             }
 
-            var gradientStart = (Color)ColorConverter.ConvertFromString(palette["TitleBarGradientStart"]);
-            var gradientEnd = (Color)ColorConverter.ConvertFromString(palette["TitleBarGradientEnd"]);
-            if (Resources["TitleBarGradient"] is LinearGradientBrush existingGradient &&
-                !existingGradient.IsFrozen &&
-                existingGradient.GradientStops.Count >= 2)
-            {
-                existingGradient.GradientStops[0].Color = gradientStart;
-                existingGradient.GradientStops[1].Color = gradientEnd;
-            }
-            else
-            {
-                Resources["TitleBarGradient"] = new LinearGradientBrush(
-                    new GradientStopCollection
-                    {
-                        new GradientStop(gradientStart, 0),
-                        new GradientStop(gradientEnd, 1)
-                    },
-                    new Point(0, 0),
-                    new Point(1, 0));
-            }
+            SetThemeGradient("TitleBarGradient",
+                (Color)ColorConverter.ConvertFromString(palette["TitleBarGradientStart"]),
+                (Color)ColorConverter.ConvertFromString(palette["TitleBarGradientEnd"]));
 
             ThemeToggleButton.Content = darkMode ? "☀ Light" : "🌙 Dark";
             AppLogger.Info($"Theme switched to {(darkMode ? "dark" : "light")} mode.");
+        }
+
+        private void SetThemeBrush(string key, Color color)
+        {
+            if (Resources[key] is SolidColorBrush existing && !existing.IsFrozen)
+            {
+                existing.Color = color;
+                return;
+            }
+
+            var replacement = new SolidColorBrush(color);
+            if (Resources[key] is SolidColorBrush old)
+            {
+                Resources[key] = replacement;
+                ReplaceBrushReferences(this, old, replacement);
+            }
+            else
+            {
+                Resources[key] = replacement;
+            }
+        }
+
+        private void SetThemeGradient(string key, Color start, Color end)
+        {
+            if (Resources[key] is LinearGradientBrush existing && !existing.IsFrozen && existing.GradientStops.Count >= 2)
+            {
+                existing.GradientStops[0].Color = start;
+                existing.GradientStops[1].Color = end;
+                return;
+            }
+
+            var replacement = new LinearGradientBrush(
+                new GradientStopCollection { new GradientStop(start, 0), new GradientStop(end, 1) },
+                new Point(0, 0), new Point(1, 0));
+
+            if (Resources[key] is Brush old)
+            {
+                Resources[key] = replacement;
+                ReplaceBrushReferences(this, old, replacement);
+            }
+            else
+            {
+                Resources[key] = replacement;
+            }
+        }
+
+        private void ReplaceBrushReferences(DependencyObject target, Brush oldBrush, Brush newBrush)
+        {
+            if (target is null) return;
+
+            if (target is Control control)
+            {
+                if (ReferenceEquals(control.Background, oldBrush)) control.Background = newBrush;
+                if (ReferenceEquals(control.Foreground, oldBrush)) control.Foreground = newBrush;
+                if (ReferenceEquals(control.BorderBrush, oldBrush)) control.BorderBrush = newBrush;
+            }
+            if (target is Border border)
+            {
+                if (ReferenceEquals(border.Background, oldBrush)) border.Background = newBrush;
+                if (ReferenceEquals(border.BorderBrush, oldBrush)) border.BorderBrush = newBrush;
+            }
+            if (target is Panel panel && ReferenceEquals(panel.Background, oldBrush)) panel.Background = newBrush;
+            if (target is TextBlock text && ReferenceEquals(text.Foreground, oldBrush)) text.Foreground = newBrush;
+            if (target is Shape shape)
+            {
+                if (ReferenceEquals(shape.Fill, oldBrush)) shape.Fill = newBrush;
+                if (ReferenceEquals(shape.Stroke, oldBrush)) shape.Stroke = newBrush;
+            }
+            if (target is Axis axis && ReferenceEquals(axis.Foreground, oldBrush)) axis.Foreground = newBrush;
+
+            int children = VisualTreeHelper.GetChildrenCount(target);
+            for (int i = 0; i < children; i++)
+            {
+                ReplaceBrushReferences(VisualTreeHelper.GetChild(target, i), oldBrush, newBrush);
+            }
         }
 
         private void ExportEvidenceBundleBtn_Click(object sender, RoutedEventArgs e)
@@ -876,16 +955,90 @@ namespace Multi_Layer_Spoofing_Detector
 
         private void UpdateReportSummary()
         {
-            TotalThreatsText.Text = _threatAlerts.Count.ToString();
-            CriticalAlertsText.Text = _threatAlerts.Count(a => a.Severity == "Critical").ToString();
-            PacketsAnalyzedText.Text = _reports.Any() ? _reports[0].PacketsAnalyzed.ToString("N0") : "0";
-
+            int packets = _reports.Any() ? _reports[0].PacketsAnalyzed : 0;
             int critical = _threatAlerts.Count(a => a.Severity == "Critical");
             int warnings = _threatAlerts.Count(a => a.Severity == "Warning");
+            var elapsedSeconds = Math.Max(1, (_lastAnalysisTime == default ? 1 : (_lastAnalysisTime - _captureStartTime).TotalSeconds));
+            var avgPktRate = packets / elapsedSeconds;
+
+            TotalThreatsText.Text = $"{_threatAlerts.Count} threats detected";
+            CriticalAlertsText.Text = critical.ToString();
+            PacketsAnalyzedText.Text = packets.ToString("N0");
+            PktRateText.Text = $"{avgPktRate:0.#} pkt/s avg";
+
             InsightsText.Text =
-                $"Current CV Score: {_currentCvssScore:0.0}. " +
+                $"Current CVSS score: {_currentCvssScore:0.0}. " +
                 $"Detected alerts: {critical} critical, {warnings} warning. " +
                 "Action: prioritize high-confidence anomalies and export evidence bundle for documentation.";
+
+            UpdateAnalyticsVisuals(packets, avgPktRate, critical, warnings);
+        }
+
+        private void UpdateAnalyticsVisuals(int packets, double avgPktRate, int critical, int warnings)
+        {
+            int arpAnomalies = _analysisResults.Count(r => r.Category.Equals("ARP", StringComparison.OrdinalIgnoreCase) && r.RiskLevel != "Low");
+            int dnsAnomalies = _analysisResults.Count(r => r.Category.Equals("DNS", StringComparison.OrdinalIgnoreCase) && r.RiskLevel != "Low");
+            int ipAnomalies = _analysisResults.Count(r => r.Category.Equals("IP", StringComparison.OrdinalIgnoreCase) && r.RiskLevel != "Low");
+
+            var uniqueIps = _threatAlerts.Select(a => a.IpAddress).Where(ip => !string.IsNullOrWhiteSpace(ip) && ip != "System").Distinct().Count();
+            var captureMinutes = Math.Max(1, (_lastAnalysisTime == default ? 1 : (_lastAnalysisTime - _captureStartTime).TotalMinutes));
+
+            StatAvgPktRate.Text = avgPktRate.ToString("0.#");
+            StatUniqueIPs.Text = uniqueIps.ToString("N0");
+            StatArpAnomalies.Text = arpAnomalies.ToString();
+            StatDnsAnomalies.Text = dnsAnomalies.ToString();
+            StatIpAnomalies.Text = ipAnomalies.ToString();
+            StatCaptureMins.Text = captureMinutes.ToString("0");
+
+            ThreatTimelineChart.Series = new SeriesCollection
+            {
+                new LineSeries
+                {
+                    Title = "Total",
+                    Values = new ChartValues<int> { Math.Max(0, packets / 5), Math.Max(0, packets / 4), Math.Max(0, packets / 3), Math.Max(0, packets / 2), packets },
+                    Stroke = (SolidColorBrush)FindResource("InfoBrush"),
+                    Fill = Brushes.Transparent,
+                    PointGeometry = null
+                },
+                new LineSeries
+                {
+                    Title = "Flagged",
+                    Values = new ChartValues<int> { Math.Max(0, (critical + warnings) / 5), Math.Max(0, (critical + warnings) / 4), Math.Max(0, (critical + warnings) / 3), Math.Max(0, (critical + warnings) / 2), critical + warnings },
+                    Stroke = (SolidColorBrush)FindResource("CritBrush"),
+                    Fill = Brushes.Transparent,
+                    PointGeometry = null
+                }
+            };
+            TimelineAxisX.Labels = new[] { "-4", "-3", "-2", "-1", "now" };
+
+            ProtocolPieChart.Series = new SeriesCollection
+            {
+                new PieSeries { Title = "ARP", Values = new ChartValues<double> { Math.Max(1, _analysisResults.Count(r => r.Category == "ARP")) }, Fill = (SolidColorBrush)FindResource("ArpBrush"), DataLabels = false },
+                new PieSeries { Title = "DNS", Values = new ChartValues<double> { Math.Max(1, _analysisResults.Count(r => r.Category == "DNS")) }, Fill = (SolidColorBrush)FindResource("DnsBrush"), DataLabels = false },
+                new PieSeries { Title = "IP", Values = new ChartValues<double> { Math.Max(1, _analysisResults.Count(r => r.Category == "IP")) }, Fill = (SolidColorBrush)FindResource("IpBrush"), DataLabels = false }
+            };
+
+            PacketFlowChart.Series = new SeriesCollection
+            {
+                new ColumnSeries { Title = "ARP", Values = new ChartValues<int> { arpAnomalies }, Fill = (SolidColorBrush)FindResource("ArpBrush") },
+                new ColumnSeries { Title = "DNS", Values = new ChartValues<int> { dnsAnomalies }, Fill = (SolidColorBrush)FindResource("DnsBrush") },
+                new ColumnSeries { Title = "IP", Values = new ChartValues<int> { ipAnomalies }, Fill = (SolidColorBrush)FindResource("IpBrush") }
+            };
+
+            var av = Math.Min(10, _currentCvssScore * 0.9);
+            var ac = Math.Min(10, 10 - (_currentCvssScore * 0.5));
+            var imp = Math.Min(10, _currentCvssScore);
+            var exp = Math.Min(10, _currentCvssScore * 0.8);
+
+            CvssAvText.Text = av.ToString("0.0");
+            CvssAcText.Text = ac.ToString("0.0");
+            CvssImpText.Text = imp.ToString("0.0");
+            CvssExpText.Text = exp.ToString("0.0");
+
+            CvssAvBar.Width = av * 12;
+            CvssAcBar.Width = ac * 12;
+            CvssImpBar.Width = imp * 12;
+            CvssExpBar.Width = exp * 12;
         }
 
         private void UpdateAlertsDisplay()
@@ -901,14 +1054,6 @@ namespace Multi_Layer_Spoofing_Detector
 
         private Border CreateAlertUI(ThreatAlert alert)
         {
-            string backgroundColor = alert.Severity switch
-            {
-                "Critical" => "#4A2C2A",
-                "Warning" => "#4A3C2A",
-                "Safe" => "#2A4A2A",
-                _ => "#333344"
-            };
-
             string borderColor = alert.Severity switch
             {
                 "Critical" => "CriticalBrush",
@@ -919,7 +1064,7 @@ namespace Multi_Layer_Spoofing_Detector
 
             var border = new Border
             {
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(backgroundColor)),
+                Background = (SolidColorBrush)FindResource("BgBase"),
                 BorderBrush = (SolidColorBrush)FindResource(borderColor),
                 BorderThickness = new Thickness(2),
                 CornerRadius = new CornerRadius(8),
@@ -1017,14 +1162,6 @@ namespace Multi_Layer_Spoofing_Detector
         }
         private Border CreateAnalysisResultUI(AnalysisResult result)
         {
-            string backgroundColor = result.RiskLevel switch
-            {
-                "High" => "#4A2C2A",
-                "Medium" => "#4A3C2A",
-                "Low" => "#2A4A2A",
-                _ => "#333344"
-            };
-
             string riskIcon = result.RiskLevel switch
             {
                 "High" => "🔴",
@@ -1044,7 +1181,13 @@ namespace Multi_Layer_Spoofing_Detector
 
             var border = new Border
             {
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(backgroundColor)),
+                Background = (SolidColorBrush)FindResource("BgBase"),
+                BorderBrush = result.RiskLevel == "High"
+                    ? (SolidColorBrush)FindResource("CriticalBrush")
+                    : result.RiskLevel == "Medium"
+                        ? (SolidColorBrush)FindResource("WarningBrush")
+                        : (SolidColorBrush)FindResource("SafeBrush"),
+                BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(8),
                 Padding = new Thickness(12),
                 Margin = new Thickness(0, 4, 0, 0)
@@ -1190,11 +1333,9 @@ body {{ font-family: Segoe UI; background:#f5f5f5; padding:20px; }}
 </table>
 
 <div class='riskbox'>
-  <p class='riskTitle'>System Risk (CVSS + MITRE)</p>
+  <p class='riskTitle'>System Risk (CVSS Score)</p>
   <div class='riskScore'>
-    <span class='badge cvss-{riskClass}'>{HtmlSafe(risk.Rating)}</span>
-    &nbsp;
-    <span class='scoreBadge cvss-{riskClass}'>Score: {risk.Score:0.0}</span>
+    <span class='scoreBadge cvss-{riskClass}'>CVSS Score: {risk.Score:0.0}</span>
   </div>
   <div style='margin-top:10px;'>
     <b>Summary</b>
@@ -1210,11 +1351,12 @@ body {{ font-family: Segoe UI; background:#f5f5f5; padding:20px; }}
 
 <h2>Executive Summary</h2>
 <div class='cards'>
-  <div class='card critical'><b>Critical</b><br/>{criticalCount}</div>
-  <div class='card warning'><b>Warning</b><br/>{warningCount}</div>
+  <div class='card'><b>CVSS Score</b><br/>{risk.Score:0.0}</div>
+  <div class='card'><b>Total Threats</b><br/>{threatAlerts.Count}</div>
   <div class='card'><b>Flows</b><br/>{totalPackets:N0}</div>
   <div class='card safe'><b>Confidence</b><br/>{avgConfidence}%</div>
 </div>
+<p><b>CVSS Rating Legend:</b> Low 0.1-3.9 | Medium 4.0-6.9 | High 7.0-8.9 | Critical 9.0-10.0</p>
 
 <h2>Detected Threat Alerts</h2>
 <table class='table'>
@@ -1278,16 +1420,17 @@ body {{ font-family: Segoe UI; background:#f5f5f5; padding:20px; }}
                     SystemRisk = new
                     {
                         CvssScore = risk.Score,
-                        CvssRating = risk.Rating,
+                        CvssRatingLegend = "Low 0.1-3.9 | Medium 4.0-6.9 | High 7.0-8.9 | Critical 9.0-10.0",
                         Summary = risk.SummaryBullets,
                         MitreAttack = risk.MitreItems
                     },
 
                     ExecutiveSummary = new
                     {
+                        CvssScore = risk.Score,
                         TotalThreats = threatAlerts.Count,
-                        CriticalThreats = threatAlerts.Count(a => a.Severity == "Critical"),
-                        WarningThreats = threatAlerts.Count(a => a.Severity == "Warning"),
+                        TotalFlows = caseMeta.PacketsAnalyzed,
+                        CvssRatingLegend = "Low 0.1-3.9 | Medium 4.0-6.9 | High 7.0-8.9 | Critical 9.0-10.0",
                         AverageConfidence = analysisResults.Any()
                             ? Math.Round(analysisResults.Average(r => r.Confidence), 2)
                             : 0
