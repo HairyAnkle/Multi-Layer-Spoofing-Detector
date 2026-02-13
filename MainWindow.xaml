@@ -978,6 +978,193 @@
                             <!-- ── CENTRE COLUMN: ANALYTICS ────── -->
                             <StackPanel Grid.Column="1" Margin="0,0,12,0">
 
+                            <!-- Detection Outputs -->
+                            <Border Grid.Column="0" Style="{StaticResource CardStyle}" Margin="0,0,12,0">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
+                                        <TextBlock Text="🔍" FontSize="15" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Detection Outputs" Style="{StaticResource TitleStyle}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <TextBlock FontFamily="Segoe UI" FontSize="11" Margin="0,0,0,12" TextWrapping="Wrap">
+                                        <Run Foreground="{StaticResource TextSecondary}">Structured findings per spoofing class. Values in</Run>
+                                        <Run Foreground="{StaticResource SafeBrush}" FontWeight="SemiBold">green</Run>
+                                        <Run Foreground="{StaticResource TextSecondary}">= benign,</Run>
+                                        <Run Foreground="{StaticResource WarnBrush}" FontWeight="SemiBold">amber</Run>
+                                        <Run Foreground="{StaticResource TextSecondary}">= suspicious,</Run>
+                                        <Run Foreground="{StaticResource CritBrush}" FontWeight="SemiBold">red</Run>
+                                        <Run Foreground="{StaticResource TextSecondary}">= confirmed threat.</Run>
+                                    </TextBlock>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- ARP -->
+                                        <Border Grid.Column="0"
+                                                Background="{StaticResource BgBase}"
+                                                BorderBrush="#3D2870" BorderThickness="1"
+                                                CornerRadius="10" Padding="12" Margin="0,0,8,0">
+                                            <StackPanel>
+                                                <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
+                                                    <Border Background="#160E2A" CornerRadius="6" Padding="7,3"
+                                                            Margin="0,0,0,0">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <Ellipse Width="8" Height="8" Fill="{StaticResource ArpBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="ARP  Layer 2"
+                                                                       Foreground="{StaticResource ArpBrush}"
+                                                                       FontFamily="Consolas" FontSize="11" FontWeight="Bold"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </StackPanel>
+                                                <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="220"><StackPanel x:Name="ArpResultsPanel">
+                                                    <Grid Margin="0,0,0,6">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="Gratuitous ARPs" Foreground="{StaticResource TextSecondary}" FontFamily="Segoe UI" FontSize="12"/>
+                                                        <TextBlock x:Name="ArpGratuitousText" Grid.Column="1" Text="—" Foreground="{StaticResource TextMuted}" FontFamily="Consolas" FontSize="12" FontWeight="Bold"/>
+                                                    </Grid>
+                                                    <Grid Margin="0,0,0,6">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="MAC–IP conflicts" Foreground="{StaticResource TextSecondary}" FontFamily="Segoe UI" FontSize="12"/>
+                                                        <TextBlock x:Name="ArpConflictsText" Grid.Column="1" Text="—" Foreground="{StaticResource TextMuted}" FontFamily="Consolas" FontSize="12" FontWeight="Bold"/>
+                                                    </Grid>
+                                                    <Grid Margin="0,0,0,6">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="Poison attempts" Foreground="{StaticResource TextSecondary}" FontFamily="Segoe UI" FontSize="12"/>
+                                                        <TextBlock x:Name="ArpPoisonText" Grid.Column="1" Text="—" Foreground="{StaticResource TextMuted}" FontFamily="Consolas" FontSize="12" FontWeight="Bold"/>
+                                                    </Grid>
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="Confidence" Foreground="{StaticResource TextSecondary}" FontFamily="Segoe UI" FontSize="12"/>
+                                                        <TextBlock x:Name="ArpConfText" Grid.Column="1" Text="—" Foreground="{StaticResource TextMuted}" FontFamily="Consolas" FontSize="12" FontWeight="Bold"/>
+                                                    </Grid>
+                                                </StackPanel></ScrollViewer>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- DNS -->
+                                        <Border Grid.Column="1"
+                                                Background="{StaticResource BgBase}"
+                                                BorderBrush="#0D4860" BorderThickness="1"
+                                                CornerRadius="10" Padding="12" Margin="0,0,8,0">
+                                            <StackPanel>
+                                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                                    <Border Background="#071A28" CornerRadius="6" Padding="7,3">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <Ellipse Width="8" Height="8" Fill="{StaticResource DnsBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="DNS  Layer 7"
+                                                                       Foreground="{StaticResource DnsBrush}"
+                                                                       FontFamily="Consolas" FontSize="11" FontWeight="Bold"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </StackPanel>
+                                                <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="220"><StackPanel x:Name="DnsResultsPanel">
+                                                    <Grid Margin="0,0,0,6">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="Resp w/o query" Foreground="{StaticResource TextSecondary}" FontFamily="Segoe UI" FontSize="12"/>
+                                                        <TextBlock x:Name="DnsNoQueryText" Grid.Column="1" Text="—" Foreground="{StaticResource TextMuted}" FontFamily="Consolas" FontSize="12" FontWeight="Bold"/>
+                                                    </Grid>
+                                                    <Grid Margin="0,0,0,6">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="TTL anomalies" Foreground="{StaticResource TextSecondary}" FontFamily="Segoe UI" FontSize="12"/>
+                                                        <TextBlock x:Name="DnsTtlText" Grid.Column="1" Text="—" Foreground="{StaticResource TextMuted}" FontFamily="Consolas" FontSize="12" FontWeight="Bold"/>
+                                                    </Grid>
+                                                    <Grid Margin="0,0,0,6">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="Rogue resolvers" Foreground="{StaticResource TextSecondary}" FontFamily="Segoe UI" FontSize="12"/>
+                                                        <TextBlock x:Name="DnsRogueText" Grid.Column="1" Text="—" Foreground="{StaticResource TextMuted}" FontFamily="Consolas" FontSize="12" FontWeight="Bold"/>
+                                                    </Grid>
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="Confidence" Foreground="{StaticResource TextSecondary}" FontFamily="Segoe UI" FontSize="12"/>
+                                                        <TextBlock x:Name="DnsConfText" Grid.Column="1" Text="—" Foreground="{StaticResource TextMuted}" FontFamily="Consolas" FontSize="12" FontWeight="Bold"/>
+                                                    </Grid>
+                                                </StackPanel></ScrollViewer>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- IP -->
+                                        <Border Grid.Column="2"
+                                                Background="{StaticResource BgBase}"
+                                                BorderBrush="#1A3468" BorderThickness="1"
+                                                CornerRadius="10" Padding="12">
+                                            <StackPanel>
+                                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                                    <Border Background="#0A1428" CornerRadius="6" Padding="7,3">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <Ellipse Width="8" Height="8" Fill="{StaticResource IpBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="IP   Layer 3"
+                                                                       Foreground="{StaticResource IpBrush}"
+                                                                       FontFamily="Consolas" FontSize="11" FontWeight="Bold"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </StackPanel>
+                                                <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="220"><StackPanel x:Name="IpResultsPanel">
+                                                    <Grid Margin="0,0,0,6">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="Src addr forgeries" Foreground="{StaticResource TextSecondary}" FontFamily="Segoe UI" FontSize="12"/>
+                                                        <TextBlock x:Name="IpSpoofedText" Grid.Column="1" Text="—" Foreground="{StaticResource TextMuted}" FontFamily="Consolas" FontSize="12" FontWeight="Bold"/>
+                                                    </Grid>
+                                                    <Grid Margin="0,0,0,6">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="TTL inconsist." Foreground="{StaticResource TextSecondary}" FontFamily="Segoe UI" FontSize="12"/>
+                                                        <TextBlock x:Name="IpTtlText" Grid.Column="1" Text="—" Foreground="{StaticResource TextMuted}" FontFamily="Consolas" FontSize="12" FontWeight="Bold"/>
+                                                    </Grid>
+                                                    <Grid Margin="0,0,0,6">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="Bogon sources" Foreground="{StaticResource TextSecondary}" FontFamily="Segoe UI" FontSize="12"/>
+                                                        <TextBlock x:Name="IpBogonText" Grid.Column="1" Text="—" Foreground="{StaticResource TextMuted}" FontFamily="Consolas" FontSize="12" FontWeight="Bold"/>
+                                                    </Grid>
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="Confidence" Foreground="{StaticResource TextSecondary}" FontFamily="Segoe UI" FontSize="12"/>
+                                                        <TextBlock x:Name="IpConfText" Grid.Column="1" Text="—" Foreground="{StaticResource TextMuted}" FontFamily="Consolas" FontSize="12" FontWeight="Bold"/>
+                                                    </Grid>
+                                                </StackPanel></ScrollViewer>
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+
                                 <!-- Analytics & Insights Card -->
                                 <Border Style="{StaticResource CardStyle}">
                                     <StackPanel>
@@ -1624,202 +1811,15 @@
                         </Grid>
 
                         <!-- ─────────────────────────────────────────
-                             ROW C — DETECTION OUTPUTS + REPORTING
+                             ROW C — REPORTING & EVIDENCE
                              ───────────────────────────────────────── -->
                         <Grid Grid.Row="1">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="2*" MinWidth="300"/>
-                                <ColumnDefinition Width="*"  MinWidth="260"/>
+                                <ColumnDefinition Width="*" MinWidth="300"/>
                             </Grid.ColumnDefinitions>
 
-                            <!-- Detection Outputs -->
-                            <Border Grid.Column="0" Style="{StaticResource CardStyle}" Margin="0,0,12,0">
-                                <StackPanel>
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
-                                        <TextBlock Text="🔍" FontSize="15" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="Detection Outputs" Style="{StaticResource TitleStyle}" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                    <TextBlock FontFamily="Segoe UI" FontSize="11" Margin="0,0,0,12" TextWrapping="Wrap">
-                                        <Run Foreground="{StaticResource TextSecondary}">Structured findings per spoofing class. Values in</Run>
-                                        <Run Foreground="{StaticResource SafeBrush}" FontWeight="SemiBold">green</Run>
-                                        <Run Foreground="{StaticResource TextSecondary}">= benign,</Run>
-                                        <Run Foreground="{StaticResource WarnBrush}" FontWeight="SemiBold">amber</Run>
-                                        <Run Foreground="{StaticResource TextSecondary}">= suspicious,</Run>
-                                        <Run Foreground="{StaticResource CritBrush}" FontWeight="SemiBold">red</Run>
-                                        <Run Foreground="{StaticResource TextSecondary}">= confirmed threat.</Run>
-                                    </TextBlock>
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-
-                                        <!-- ARP -->
-                                        <Border Grid.Column="0"
-                                                Background="{StaticResource BgBase}"
-                                                BorderBrush="#3D2870" BorderThickness="1"
-                                                CornerRadius="10" Padding="12" Margin="0,0,8,0">
-                                            <StackPanel>
-                                                <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
-                                                    <Border Background="#160E2A" CornerRadius="6" Padding="7,3"
-                                                            Margin="0,0,0,0">
-                                                        <StackPanel Orientation="Horizontal">
-                                                            <Ellipse Width="8" Height="8" Fill="{StaticResource ArpBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                                            <TextBlock Text="ARP  Layer 2"
-                                                                       Foreground="{StaticResource ArpBrush}"
-                                                                       FontFamily="Consolas" FontSize="11" FontWeight="Bold"/>
-                                                        </StackPanel>
-                                                    </Border>
-                                                </StackPanel>
-                                                <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="220"><StackPanel x:Name="ArpResultsPanel">
-                                                    <Grid Margin="0,0,0,6">
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="*"/>
-                                                            <ColumnDefinition Width="Auto"/>
-                                                        </Grid.ColumnDefinitions>
-                                                        <TextBlock Text="Gratuitous ARPs" Foreground="{StaticResource TextSecondary}" FontFamily="Segoe UI" FontSize="12"/>
-                                                        <TextBlock x:Name="ArpGratuitousText" Grid.Column="1" Text="—" Foreground="{StaticResource TextMuted}" FontFamily="Consolas" FontSize="12" FontWeight="Bold"/>
-                                                    </Grid>
-                                                    <Grid Margin="0,0,0,6">
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="*"/>
-                                                            <ColumnDefinition Width="Auto"/>
-                                                        </Grid.ColumnDefinitions>
-                                                        <TextBlock Text="MAC–IP conflicts" Foreground="{StaticResource TextSecondary}" FontFamily="Segoe UI" FontSize="12"/>
-                                                        <TextBlock x:Name="ArpConflictsText" Grid.Column="1" Text="—" Foreground="{StaticResource TextMuted}" FontFamily="Consolas" FontSize="12" FontWeight="Bold"/>
-                                                    </Grid>
-                                                    <Grid Margin="0,0,0,6">
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="*"/>
-                                                            <ColumnDefinition Width="Auto"/>
-                                                        </Grid.ColumnDefinitions>
-                                                        <TextBlock Text="Poison attempts" Foreground="{StaticResource TextSecondary}" FontFamily="Segoe UI" FontSize="12"/>
-                                                        <TextBlock x:Name="ArpPoisonText" Grid.Column="1" Text="—" Foreground="{StaticResource TextMuted}" FontFamily="Consolas" FontSize="12" FontWeight="Bold"/>
-                                                    </Grid>
-                                                    <Grid>
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="*"/>
-                                                            <ColumnDefinition Width="Auto"/>
-                                                        </Grid.ColumnDefinitions>
-                                                        <TextBlock Text="Confidence" Foreground="{StaticResource TextSecondary}" FontFamily="Segoe UI" FontSize="12"/>
-                                                        <TextBlock x:Name="ArpConfText" Grid.Column="1" Text="—" Foreground="{StaticResource TextMuted}" FontFamily="Consolas" FontSize="12" FontWeight="Bold"/>
-                                                    </Grid>
-                                                </StackPanel></ScrollViewer>
-                                            </StackPanel>
-                                        </Border>
-
-                                        <!-- DNS -->
-                                        <Border Grid.Column="1"
-                                                Background="{StaticResource BgBase}"
-                                                BorderBrush="#0D4860" BorderThickness="1"
-                                                CornerRadius="10" Padding="12" Margin="0,0,8,0">
-                                            <StackPanel>
-                                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                                    <Border Background="#071A28" CornerRadius="6" Padding="7,3">
-                                                        <StackPanel Orientation="Horizontal">
-                                                            <Ellipse Width="8" Height="8" Fill="{StaticResource DnsBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                                            <TextBlock Text="DNS  Layer 7"
-                                                                       Foreground="{StaticResource DnsBrush}"
-                                                                       FontFamily="Consolas" FontSize="11" FontWeight="Bold"/>
-                                                        </StackPanel>
-                                                    </Border>
-                                                </StackPanel>
-                                                <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="220"><StackPanel x:Name="DnsResultsPanel">
-                                                    <Grid Margin="0,0,0,6">
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="*"/>
-                                                            <ColumnDefinition Width="Auto"/>
-                                                        </Grid.ColumnDefinitions>
-                                                        <TextBlock Text="Resp w/o query" Foreground="{StaticResource TextSecondary}" FontFamily="Segoe UI" FontSize="12"/>
-                                                        <TextBlock x:Name="DnsNoQueryText" Grid.Column="1" Text="—" Foreground="{StaticResource TextMuted}" FontFamily="Consolas" FontSize="12" FontWeight="Bold"/>
-                                                    </Grid>
-                                                    <Grid Margin="0,0,0,6">
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="*"/>
-                                                            <ColumnDefinition Width="Auto"/>
-                                                        </Grid.ColumnDefinitions>
-                                                        <TextBlock Text="TTL anomalies" Foreground="{StaticResource TextSecondary}" FontFamily="Segoe UI" FontSize="12"/>
-                                                        <TextBlock x:Name="DnsTtlText" Grid.Column="1" Text="—" Foreground="{StaticResource TextMuted}" FontFamily="Consolas" FontSize="12" FontWeight="Bold"/>
-                                                    </Grid>
-                                                    <Grid Margin="0,0,0,6">
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="*"/>
-                                                            <ColumnDefinition Width="Auto"/>
-                                                        </Grid.ColumnDefinitions>
-                                                        <TextBlock Text="Rogue resolvers" Foreground="{StaticResource TextSecondary}" FontFamily="Segoe UI" FontSize="12"/>
-                                                        <TextBlock x:Name="DnsRogueText" Grid.Column="1" Text="—" Foreground="{StaticResource TextMuted}" FontFamily="Consolas" FontSize="12" FontWeight="Bold"/>
-                                                    </Grid>
-                                                    <Grid>
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="*"/>
-                                                            <ColumnDefinition Width="Auto"/>
-                                                        </Grid.ColumnDefinitions>
-                                                        <TextBlock Text="Confidence" Foreground="{StaticResource TextSecondary}" FontFamily="Segoe UI" FontSize="12"/>
-                                                        <TextBlock x:Name="DnsConfText" Grid.Column="1" Text="—" Foreground="{StaticResource TextMuted}" FontFamily="Consolas" FontSize="12" FontWeight="Bold"/>
-                                                    </Grid>
-                                                </StackPanel></ScrollViewer>
-                                            </StackPanel>
-                                        </Border>
-
-                                        <!-- IP -->
-                                        <Border Grid.Column="2"
-                                                Background="{StaticResource BgBase}"
-                                                BorderBrush="#1A3468" BorderThickness="1"
-                                                CornerRadius="10" Padding="12">
-                                            <StackPanel>
-                                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                                    <Border Background="#0A1428" CornerRadius="6" Padding="7,3">
-                                                        <StackPanel Orientation="Horizontal">
-                                                            <Ellipse Width="8" Height="8" Fill="{StaticResource IpBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                                            <TextBlock Text="IP   Layer 3"
-                                                                       Foreground="{StaticResource IpBrush}"
-                                                                       FontFamily="Consolas" FontSize="11" FontWeight="Bold"/>
-                                                        </StackPanel>
-                                                    </Border>
-                                                </StackPanel>
-                                                <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="220"><StackPanel x:Name="IpResultsPanel">
-                                                    <Grid Margin="0,0,0,6">
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="*"/>
-                                                            <ColumnDefinition Width="Auto"/>
-                                                        </Grid.ColumnDefinitions>
-                                                        <TextBlock Text="Src addr forgeries" Foreground="{StaticResource TextSecondary}" FontFamily="Segoe UI" FontSize="12"/>
-                                                        <TextBlock x:Name="IpSpoofedText" Grid.Column="1" Text="—" Foreground="{StaticResource TextMuted}" FontFamily="Consolas" FontSize="12" FontWeight="Bold"/>
-                                                    </Grid>
-                                                    <Grid Margin="0,0,0,6">
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="*"/>
-                                                            <ColumnDefinition Width="Auto"/>
-                                                        </Grid.ColumnDefinitions>
-                                                        <TextBlock Text="TTL inconsist." Foreground="{StaticResource TextSecondary}" FontFamily="Segoe UI" FontSize="12"/>
-                                                        <TextBlock x:Name="IpTtlText" Grid.Column="1" Text="—" Foreground="{StaticResource TextMuted}" FontFamily="Consolas" FontSize="12" FontWeight="Bold"/>
-                                                    </Grid>
-                                                    <Grid Margin="0,0,0,6">
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="*"/>
-                                                            <ColumnDefinition Width="Auto"/>
-                                                        </Grid.ColumnDefinitions>
-                                                        <TextBlock Text="Bogon sources" Foreground="{StaticResource TextSecondary}" FontFamily="Segoe UI" FontSize="12"/>
-                                                        <TextBlock x:Name="IpBogonText" Grid.Column="1" Text="—" Foreground="{StaticResource TextMuted}" FontFamily="Consolas" FontSize="12" FontWeight="Bold"/>
-                                                    </Grid>
-                                                    <Grid>
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="*"/>
-                                                            <ColumnDefinition Width="Auto"/>
-                                                        </Grid.ColumnDefinitions>
-                                                        <TextBlock Text="Confidence" Foreground="{StaticResource TextSecondary}" FontFamily="Segoe UI" FontSize="12"/>
-                                                        <TextBlock x:Name="IpConfText" Grid.Column="1" Text="—" Foreground="{StaticResource TextMuted}" FontFamily="Consolas" FontSize="12" FontWeight="Bold"/>
-                                                    </Grid>
-                                                </StackPanel></ScrollViewer>
-                                            </StackPanel>
-                                        </Border>
-                                    </Grid>
-                                </StackPanel>
-                            </Border>
-
                             <!-- Reporting & Evidence -->
-                            <Border Grid.Column="1" Style="{StaticResource CardStyle}" Margin="0">
+                            <Border Grid.Column="0" Style="{StaticResource CardStyle}" Margin="0">
                                 <StackPanel>
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
                                         <TextBlock Text="📄" FontSize="15" Margin="0,0,8,0" VerticalAlignment="Center"/>
