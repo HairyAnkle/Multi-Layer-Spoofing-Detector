@@ -56,6 +56,16 @@
         <SolidColorBrush x:Key="TextSecondary"  Color="#6B9EC8"/>
         <SolidColorBrush x:Key="TextMuted"      Color="#3A5D80"/>
 
+        <!-- Compatibility aliases for code-behind resource keys -->
+        <SolidColorBrush x:Key="CriticalBrush"      Color="#F04058"/>
+        <SolidColorBrush x:Key="WarningBrush"       Color="#F5A623"/>
+        <SolidColorBrush x:Key="PrimaryAccentBrush" Color="#06CFEE"/>
+        <SolidColorBrush x:Key="ProtocolArpBrush"   Color="#A78BFA"/>
+        <SolidColorBrush x:Key="ProtocolDnsBrush"   Color="#22D3EE"/>
+        <SolidColorBrush x:Key="ProtocolIpBrush"    Color="#60A5FA"/>
+        <SolidColorBrush x:Key="TextBrush"          Color="#D8EAF8"/>
+        <SolidColorBrush x:Key="SubTextBrush"       Color="#6B9EC8"/>
+
         <!-- Background gradients -->
         <LinearGradientBrush x:Key="AppGradient" StartPoint="0,0" EndPoint="1,1">
             <GradientStop Color="#07111E" Offset="0"/>
@@ -118,6 +128,10 @@
             <Setter Property="FontSize"     Value="13"/>
             <Setter Property="TextWrapping" Value="Wrap"/>
         </Style>
+
+        <!-- Compatibility text styles referenced by code-behind -->
+        <Style x:Key="RegularTextStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyStyle}"/>
+        <Style x:Key="SubTextStyle" TargetType="TextBlock" BasedOn="{StaticResource SubTitleStyle}"/>
 
         <Style x:Key="MonoStyle" TargetType="TextBlock">
             <Setter Property="Foreground"   Value="{StaticResource TextPrimary}"/>
@@ -289,13 +303,21 @@
                         </StackPanel>
                     </StackPanel>
 
-                    <!-- Date/time -->
-                    <TextBlock x:Name="DateTimeText"
-                               Grid.Column="1"
-                               Foreground="{StaticResource TextSecondary}"
-                               FontFamily="Consolas" FontSize="11"
-                               VerticalAlignment="Center"
-                               Margin="0,0,14,0"/>
+                    <!-- Date/time + theme -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock x:Name="DateTimeText"
+                                   Foreground="{StaticResource TextSecondary}"
+                                   FontFamily="Consolas" FontSize="11"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,10,0"/>
+                        <Button x:Name="ThemeToggleButton"
+                                Content="☀ Light"
+                                Click="ThemeToggleButton_Click"
+                                Style="{StaticResource GhostBtnStyle}"
+                                Padding="8,3"
+                                MinWidth="68"
+                                Margin="0,0,8,0"/>
+                    </StackPanel>
 
                     <!-- Window controls -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
@@ -1372,6 +1394,20 @@
                                                 </StackPanel>
                                             </Border>
                                         </Grid>
+
+                                        <Border Background="{StaticResource BgBase}"
+                                                BorderBrush="{StaticResource BorderNormal}"
+                                                BorderThickness="1"
+                                                CornerRadius="8"
+                                                Padding="10"
+                                                Margin="0,10,0,0">
+                                            <TextBlock x:Name="InsightsText"
+                                                       Text="Run an analysis to populate insights."
+                                                       Foreground="{StaticResource TextSecondary}"
+                                                       FontFamily="Segoe UI"
+                                                       FontSize="12"
+                                                       TextWrapping="Wrap"/>
+                                        </Border>
                                     </StackPanel>
                                 </Border>
 
@@ -1554,16 +1590,6 @@
                                                     </Setter>
                                                 </Style>
                                             </ListBox.ItemContainerStyle>
-                                            <!-- Default placeholder item shown before any analysis -->
-                                            <ListBoxItem>
-                                                <StackPanel Orientation="Horizontal">
-                                                    <Ellipse Width="8" Height="8" Fill="{StaticResource TextMuted}"
-                                                             Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                                    <TextBlock Text="No cases recorded yet"
-                                                               Foreground="{StaticResource TextMuted}"
-                                                               FontFamily="Segoe UI" FontSize="12"/>
-                                                </StackPanel>
-                                            </ListBoxItem>
                                         </ListBox>
                                         <Button Content="↻  Refresh"
                                                 Click="RefreshRecentCasesBtn_Click"
@@ -1851,7 +1877,10 @@
                                     </Grid>
 
                                     <CheckBox x:Name="AutoRunCheckBox"
-                                              Content="Auto-run analysis after valid upload"
+                                              Content="Auto-run analysis after valid upload (disabled; run manually)"
+                                              IsEnabled="False"
+                                              Checked="AutoRunCheckBox_Changed"
+                                              Unchecked="AutoRunCheckBox_Changed"
                                               Style="{StaticResource ToggleStyle}"/>
                                 </StackPanel>
                             </Border>
@@ -1910,7 +1939,6 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                    <TextBlock x:Name="InsightsText" Text="" FontSize="1"/>
                 </Grid>
 
             </Grid>
