@@ -56,6 +56,16 @@
         <SolidColorBrush x:Key="TextSecondary"  Color="#6B9EC8"/>
         <SolidColorBrush x:Key="TextMuted"      Color="#3A5D80"/>
 
+        <!-- Compatibility aliases for code-behind resource keys -->
+        <SolidColorBrush x:Key="CriticalBrush"      Color="#F04058"/>
+        <SolidColorBrush x:Key="WarningBrush"       Color="#F5A623"/>
+        <SolidColorBrush x:Key="PrimaryAccentBrush" Color="#06CFEE"/>
+        <SolidColorBrush x:Key="ProtocolArpBrush"   Color="#A78BFA"/>
+        <SolidColorBrush x:Key="ProtocolDnsBrush"   Color="#22D3EE"/>
+        <SolidColorBrush x:Key="ProtocolIpBrush"    Color="#60A5FA"/>
+        <SolidColorBrush x:Key="TextBrush"          Color="#D8EAF8"/>
+        <SolidColorBrush x:Key="SubTextBrush"       Color="#6B9EC8"/>
+
         <!-- Background gradients -->
         <LinearGradientBrush x:Key="AppGradient" StartPoint="0,0" EndPoint="1,1">
             <GradientStop Color="#07111E" Offset="0"/>
@@ -118,6 +128,10 @@
             <Setter Property="FontSize"     Value="13"/>
             <Setter Property="TextWrapping" Value="Wrap"/>
         </Style>
+
+        <!-- Compatibility text styles referenced by code-behind -->
+        <Style x:Key="RegularTextStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyStyle}"/>
+        <Style x:Key="SubTextStyle" TargetType="TextBlock" BasedOn="{StaticResource SubTitleStyle}"/>
 
         <Style x:Key="MonoStyle" TargetType="TextBlock">
             <Setter Property="Foreground"   Value="{StaticResource TextPrimary}"/>
