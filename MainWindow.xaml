@@ -23,12 +23,12 @@
              ═══════════════════════════════════════════════ -->
 
         <!-- Base surfaces -->
-        <SolidColorBrush x:Key="BgBase"         Color="#07111E"/>
-        <SolidColorBrush x:Key="BgPanel"        Color="#0C1B2E"/>
-        <SolidColorBrush x:Key="BgCard"         Color="#0F2240"/>
-        <SolidColorBrush x:Key="BgCardSoft"     Color="#132C50"/>
-        <SolidColorBrush x:Key="BorderNormal"   Color="#1E3D68"/>
-        <SolidColorBrush x:Key="BorderBright"   Color="#2A5490"/>
+        <SolidColorBrush x:Key="BgBase"         Color="#F7FAFF"/>
+        <SolidColorBrush x:Key="BgPanel"        Color="#EEF4FB"/>
+        <SolidColorBrush x:Key="BgCard"         Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="BgCardSoft"     Color="#F2F7FE"/>
+        <SolidColorBrush x:Key="BorderNormal"   Color="#C9D9EC"/>
+        <SolidColorBrush x:Key="BorderBright"   Color="#8BB1DA"/>
 
         <!-- ─── SEMANTIC STATUS COLORS ─────────────────────
              SAFE  (#0ED98D) = No threat / nominal state
@@ -52,9 +52,19 @@
         <SolidColorBrush x:Key="IpBrush"        Color="#60A5FA"/>
 
         <!-- Typography -->
-        <SolidColorBrush x:Key="TextPrimary"    Color="#D8EAF8"/>
-        <SolidColorBrush x:Key="TextSecondary"  Color="#6B9EC8"/>
-        <SolidColorBrush x:Key="TextMuted"      Color="#3A5D80"/>
+        <SolidColorBrush x:Key="TextPrimary"    Color="#102A43"/>
+        <SolidColorBrush x:Key="TextSecondary"  Color="#486581"/>
+        <SolidColorBrush x:Key="TextMuted"      Color="#6D849E"/>
+
+        <!-- Compatibility aliases for code-behind resource keys -->
+        <SolidColorBrush x:Key="CriticalBrush"      Color="#F04058"/>
+        <SolidColorBrush x:Key="WarningBrush"       Color="#F5A623"/>
+        <SolidColorBrush x:Key="PrimaryAccentBrush" Color="#06CFEE"/>
+        <SolidColorBrush x:Key="ProtocolArpBrush"   Color="#A78BFA"/>
+        <SolidColorBrush x:Key="ProtocolDnsBrush"   Color="#22D3EE"/>
+        <SolidColorBrush x:Key="ProtocolIpBrush"    Color="#60A5FA"/>
+        <SolidColorBrush x:Key="TextBrush"          Color="#D8EAF8"/>
+        <SolidColorBrush x:Key="SubTextBrush"       Color="#6B9EC8"/>
 
         <!-- Compatibility aliases for code-behind resource keys -->
         <SolidColorBrush x:Key="CriticalBrush"      Color="#F04058"/>
@@ -68,14 +78,14 @@
 
         <!-- Background gradients -->
         <LinearGradientBrush x:Key="AppGradient" StartPoint="0,0" EndPoint="1,1">
-            <GradientStop Color="#07111E" Offset="0"/>
-            <GradientStop Color="#0C1B2E" Offset="0.5"/>
-            <GradientStop Color="#101F35" Offset="1"/>
+            <GradientStop Color="#F7FBFF" Offset="0"/>
+            <GradientStop Color="#EDF4FB" Offset="0.5"/>
+            <GradientStop Color="#E5EEF8" Offset="1"/>
         </LinearGradientBrush>
 
         <LinearGradientBrush x:Key="TitleBarGradient" StartPoint="0,0" EndPoint="1,0">
-            <GradientStop Color="#091628" Offset="0"/>
-            <GradientStop Color="#0E1E33" Offset="1"/>
+            <GradientStop Color="#E6EFF9" Offset="0"/>
+            <GradientStop Color="#DAE8F6" Offset="1"/>
         </LinearGradientBrush>
 
         <!-- KPI card accent gradients -->
@@ -252,7 +262,7 @@
     <Border Background="{StaticResource AppGradient}"
             CornerRadius="16"
             BorderThickness="1"
-            BorderBrush="#253D60">
+            BorderBrush="#B9CDE3">
 
         <Grid>
             <Grid.RowDefinitions>
@@ -310,13 +320,6 @@
                                    FontFamily="Consolas" FontSize="11"
                                    VerticalAlignment="Center"
                                    Margin="0,0,10,0"/>
-                        <Button x:Name="ThemeToggleButton"
-                                Content="☀ Light"
-                                Click="ThemeToggleButton_Click"
-                                Style="{StaticResource GhostBtnStyle}"
-                                Padding="8,3"
-                                MinWidth="68"
-                                Margin="0,0,8,0"/>
                     </StackPanel>
 
                     <!-- Window controls -->
@@ -353,8 +356,8 @@
                  Every color is named and explained here.
                  ═══════════════════════════════════════ -->
             <Border x:Name="LegendBarBorder" Grid.Row="1"
-                    Background="#091628"
-                    BorderBrush="#1A3355"
+                    Background="#EAF2FB"
+                    BorderBrush="#B9CDE3"
                     BorderThickness="0,0,0,1"
                     Padding="16,8">
 
@@ -724,8 +727,8 @@
                                                 BorderBrush="{StaticResource BorderBright}"
                                                 BorderThickness="2"
                                                 CornerRadius="10"
-                                                Padding="16"
-                                                Margin="0,0,0,10"
+                                                Padding="10"
+                                                Margin="0,0,0,8"
                                                 Cursor="Hand"
                                                 MouseLeftButtonDown="UploadPcapBtn_Click">
                                             <Border.Style>
@@ -738,10 +741,10 @@
                                                 </Style>
                                             </Border.Style>
                                             <StackPanel HorizontalAlignment="Center">
-                                                <TextBlock Text="📂" FontSize="26" HorizontalAlignment="Center" Margin="0,0,0,6"/>
+                                                <TextBlock Text="📂" FontSize="20" HorizontalAlignment="Center" Margin="0,0,0,6"/>
                                                 <TextBlock Text="Drop file here or click to browse"
                                                            Foreground="{StaticResource TextPrimary}"
-                                                           FontFamily="Segoe UI" FontSize="13" FontWeight="SemiBold"
+                                                           FontFamily="Segoe UI" FontSize="12" FontWeight="SemiBold"
                                                            HorizontalAlignment="Center"/>
                                                 <TextBlock Text=".pcap  ·  .pcapng  ·  max 500 MB"
                                                            Foreground="{StaticResource TextMuted}"
@@ -821,6 +824,7 @@
 
                                         <Button x:Name="AnalyzeBtn"
                                                 Content="▶  Run AI Detection Pipeline"
+                                                Padding="10,7"
                                                 Background="{StaticResource AccentBrush}"
                                                 Foreground="#07111E"
                                                 Style="{StaticResource PrimaryBtnStyle}"
@@ -864,9 +868,7 @@
                                                    Foreground="{StaticResource TextSecondary}"
                                                    FontFamily="Segoe UI" FontSize="11"
                                                    TextWrapping="Wrap">
-                                            Status indicators follow the Color Key above.
-                                            Each layer stays in its own protocol color while normal,
-                                            then turns <Run Foreground="{StaticResource CritBrush}" FontWeight="SemiBold">red</Run> when that same layer has anomalies.
+                                            Status indicators: protocol color = normal. <Run Foreground="{StaticResource WarnBrush}" FontWeight="SemiBold">Amber</Run> = suspicious (mostly medium findings). <Run Foreground="{StaticResource CritBrush}" FontWeight="SemiBold">Red</Run> = confirmed/high-confidence anomalies.
                                         </TextBlock>
 
                                         <TextBlock x:Name="DetectionModuleStatus"

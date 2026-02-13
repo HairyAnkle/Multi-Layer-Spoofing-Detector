@@ -50,7 +50,6 @@ namespace Multi_Layer_Spoofing_Detector
         private MLIntegration? _mlIntegration;
         private bool _isMlIntegrationReady;
         private readonly AppRuntimeSettings _settings;
-        private bool _isDarkMode = true;
         private DateTime _captureStartTime = DateTime.Now;
 
         public MainWindow()
@@ -59,7 +58,6 @@ namespace Multi_Layer_Spoofing_Detector
             _settings = AppSettingsService.Load();
             _settings.AutoRunAfterUpload = false;
             AutoRunCheckBox.IsChecked = false;
-            ApplyTheme(_isDarkMode);
             InitializeTimers();
             InitializeMLIntegration();
             LoadRecentCases();
@@ -706,27 +704,6 @@ namespace Multi_Layer_Spoofing_Detector
             AppLogger.Info("Auto-run after upload is disabled; manual pipeline execution required.");
         }
 
-        private void ThemeToggleButton_Click(object sender, RoutedEventArgs e)
-        {
-            _isDarkMode = !_isDarkMode;
-            ApplyTheme(_isDarkMode);
-        }
-
-        private void ApplyTheme(bool darkMode)
-        {
-            var legendBg = (Color)ColorConverter.ConvertFromString(darkMode ? "#091628" : "#EAF2FB");
-            var legendBorder = (Color)ColorConverter.ConvertFromString(darkMode ? "#1A3355" : "#B8CCE4");
-            var contentBg = (Color)ColorConverter.ConvertFromString(darkMode ? "#00000000" : "#F7FBFF");
-
-            LegendBarBorder.Background = new SolidColorBrush(legendBg);
-            LegendBarBorder.BorderBrush = new SolidColorBrush(legendBorder);
-            MainContentGrid.Background = new SolidColorBrush(contentBg);
-            MainContentScrollViewer.Background = new SolidColorBrush(contentBg);
-
-            ThemeToggleButton.Content = darkMode ? "☀ Light" : "🌙 Dark";
-            AppLogger.Info($"Theme switched to {(darkMode ? "dark" : "light")} mode.");
-        }
-
         private void ExportEvidenceBundleBtn_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -825,27 +802,34 @@ namespace Multi_Layer_Spoofing_Detector
 
         private void UpdateDetectionLayerStatus()
         {
-            int arpFindings = _analysisResults.Count(r => r.Category == "ARP" && r.RiskLevel != "Low");
-            int dnsFindings = _analysisResults.Count(r => r.Category == "DNS" && r.RiskLevel != "Low");
-            int ipFindings = _analysisResults.Count(r => r.Category == "IP" && r.RiskLevel != "Low");
+            var arpHigh = _analysisResults.Count(r => r.Category == "ARP" && r.RiskLevel == "High");
+            var arpMedium = _analysisResults.Count(r => r.Category == "ARP" && r.RiskLevel == "Medium");
+            var dnsHigh = _analysisResults.Count(r => r.Category == "DNS" && r.RiskLevel == "High");
+            var dnsMedium = _analysisResults.Count(r => r.Category == "DNS" && r.RiskLevel == "Medium");
+            var ipHigh = _analysisResults.Count(r => r.Category == "IP" && r.RiskLevel == "High");
+            var ipMedium = _analysisResults.Count(r => r.Category == "IP" && r.RiskLevel == "Medium");
+
+            int arpFindings = arpHigh + arpMedium;
+            int dnsFindings = dnsHigh + dnsMedium;
+            int ipFindings = ipHigh + ipMedium;
 
             ArpThreatCount.Text = arpFindings.ToString();
             DnsThreatCount.Text = dnsFindings.ToString();
             IpThreatCount.Text = ipFindings.ToString();
 
-            ArpLayerStatus.Text = arpFindings > 0 ? "ANOMALY" : "NORMAL";
-            DnsLayerStatus.Text = dnsFindings > 0 ? "ANOMALY" : "NORMAL";
-            IpLayerStatus.Text = ipFindings > 0 ? "ANOMALY" : "NORMAL";
+            ArpLayerStatus.Text = arpHigh > 0 ? "CRITICAL" : (arpMedium > 0 ? "SUSPICIOUS" : "NORMAL");
+            DnsLayerStatus.Text = dnsHigh > 0 ? "CRITICAL" : (dnsMedium > 0 ? "SUSPICIOUS" : "NORMAL");
+            IpLayerStatus.Text = ipHigh > 0 ? "CRITICAL" : (ipMedium > 0 ? "SUSPICIOUS" : "NORMAL");
 
-            ArpDetectionIndicator.Fill = arpFindings > 0
+            ArpDetectionIndicator.Fill = arpHigh > 0
                 ? (SolidColorBrush)FindResource("CriticalBrush")
-                : (SolidColorBrush)FindResource("ProtocolArpBrush");
-            DnsDetectionIndicator.Fill = dnsFindings > 0
+                : arpMedium > 0 ? (SolidColorBrush)FindResource("WarningBrush") : (SolidColorBrush)FindResource("ProtocolArpBrush");
+            DnsDetectionIndicator.Fill = dnsHigh > 0
                 ? (SolidColorBrush)FindResource("CriticalBrush")
-                : (SolidColorBrush)FindResource("ProtocolDnsBrush");
-            IpDetectionIndicator.Fill = ipFindings > 0
+                : dnsMedium > 0 ? (SolidColorBrush)FindResource("WarningBrush") : (SolidColorBrush)FindResource("ProtocolDnsBrush");
+            IpDetectionIndicator.Fill = ipHigh > 0
                 ? (SolidColorBrush)FindResource("CriticalBrush")
-                : (SolidColorBrush)FindResource("ProtocolIpBrush");
+                : ipMedium > 0 ? (SolidColorBrush)FindResource("WarningBrush") : (SolidColorBrush)FindResource("ProtocolIpBrush");
         }
 
         private void UpdateReportSummary()
