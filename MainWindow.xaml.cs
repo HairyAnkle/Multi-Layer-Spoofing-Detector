@@ -58,10 +58,6 @@ namespace Multi_Layer_Spoofing_Detector
             _settings = AppSettingsService.Load();
             _settings.AutoRunAfterUpload = false;
             AutoRunCheckBox.IsChecked = false;
-            LiveAlertsLegendText.Text =
-                $"Green: < {_settings.MediumConfidenceThreshold}% confidence (informational). " +
-                $"Amber: {_settings.MediumConfidenceThreshold}%–{_settings.HighConfidenceThreshold - 1}% (suspicious). " +
-                $"Red: ≥ {_settings.HighConfidenceThreshold}% (critical).";
             InitializeTimers();
             InitializeMLIntegration();
             LoadRecentCases();
@@ -85,7 +81,7 @@ namespace Multi_Layer_Spoofing_Detector
 
                 AnalysisModuleDetails.Text = preflight.Message;
                 AnalysisModuleDetails.Foreground =
-                    (SolidColorBrush)FindResource("SafeBrush");
+                    (SolidColorBrush)FindResource("DarkGreen");
                 OperationalStatusText.Text = "● Platform ready — no active analysis";
                 AppLogger.Info("Environment preflight passed.");
             }
@@ -271,7 +267,7 @@ namespace Multi_Layer_Spoofing_Detector
                     AnalyzeBtn.IsEnabled = false;
                     FileInfoPanel.Visibility = Visibility.Collapsed;
                     UploadModuleStatus.Text = "✗ File exceeds configured size limit";
-                    UploadModuleStatus.Foreground = (SolidColorBrush)FindResource("CriticalBrush");
+                    UploadModuleStatus.Foreground = (SolidColorBrush)FindResource("BgPanel");
                     return;
                 }
 
@@ -283,16 +279,16 @@ namespace Multi_Layer_Spoofing_Detector
                 StatusIndicator.Fill = (SolidColorBrush)FindResource("SafeBrush");
 
                 UploadModuleStatus.Text = "✓ PCAP file loaded successfully";
-                UploadModuleStatus.Foreground = (SolidColorBrush)FindResource("SafeBrush");
+                UploadModuleStatus.Foreground = (SolidColorBrush)FindResource("Blacked");
 
                 AnalysisModuleStatus.Text = "✓ Ready to process packets";
-                AnalysisModuleStatus.Foreground = (SolidColorBrush)FindResource("SafeBrush");
+                AnalysisModuleStatus.Foreground = (SolidColorBrush)FindResource("Blacked");
                 AnalysisModuleDetails.Text = $"File: {System.IO.Path.GetFileName(_currentPcapFilePath)}";
 
                 AnalyzeBtn.IsEnabled = true;
 
                 ReportModuleStatus.Text = "⏸  PCAP uploaded. Run the pipeline to enable reports.";
-                ReportModuleStatus.Foreground = (SolidColorBrush)FindResource("WarningBrush");
+                ReportModuleStatus.Foreground = (SolidColorBrush)FindResource("TextMuted");
 
                 DialogService.ShowSuccess(
                     this,
@@ -413,7 +409,7 @@ namespace Multi_Layer_Spoofing_Detector
                 UpdateAnalysisResultsDisplay();
                 UpdateReportSummary();
                 ReportModuleStatus.Text = $"✓ Analysis run complete. Case: {_currentCaseId} | Findings: {_analysisResults.Count}";
-                ReportModuleStatus.Foreground = (SolidColorBrush)FindResource("SafeBrush");
+                ReportModuleStatus.Foreground = (SolidColorBrush)FindResource("TextMuted");
 
                 AnalyzeBtn.IsEnabled = true;
 
@@ -997,7 +993,7 @@ namespace Multi_Layer_Spoofing_Detector
             {
                 Header = "Explainability",
                 Margin = new Thickness(0, 4, 0, 0),
-                Foreground = (SolidColorBrush)FindResource("TextBrush")
+                Foreground = (SolidColorBrush)FindResource("TextSecondary")
             };
 
             var explainabilityText = new TextBlock
