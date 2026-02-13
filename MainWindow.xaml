@@ -1830,7 +1830,6 @@
                                         <Button Content="↻  Refresh"
                 Click="RefreshRecentCasesBtn_Click"
                 Background="#1A2C4A"
-                Foreground="{StaticResource TextPrimary}"
                 Style="{StaticResource GhostBtnStyle}"
                 HorizontalAlignment="Stretch"
                 Margin="0,6,0,0"/>
