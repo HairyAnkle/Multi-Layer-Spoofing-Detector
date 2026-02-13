@@ -1554,16 +1554,6 @@
                                                     </Setter>
                                                 </Style>
                                             </ListBox.ItemContainerStyle>
-                                            <!-- Default placeholder item shown before any analysis -->
-                                            <ListBoxItem>
-                                                <StackPanel Orientation="Horizontal">
-                                                    <Ellipse Width="8" Height="8" Fill="{StaticResource TextMuted}"
-                                                             Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                                    <TextBlock Text="No cases recorded yet"
-                                                               Foreground="{StaticResource TextMuted}"
-                                                               FontFamily="Segoe UI" FontSize="12"/>
-                                                </StackPanel>
-                                            </ListBoxItem>
                                         </ListBox>
                                         <Button Content="↻  Refresh"
                                                 Click="RefreshRecentCasesBtn_Click"
