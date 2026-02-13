@@ -48,12 +48,15 @@ namespace Multi_Layer_Spoofing_Detector
         private MLIntegration? _mlIntegration;
         private bool _isMlIntegrationReady;
         private readonly AppRuntimeSettings _settings;
+        private bool _isDarkMode = true;
 
         public MainWindow()
         {
             InitializeComponent();
             _settings = AppSettingsService.Load();
-            AutoRunCheckBox.IsChecked = _settings.AutoRunAfterUpload;
+            _settings.AutoRunAfterUpload = false;
+            AutoRunCheckBox.IsChecked = false;
+            ApplyTheme(_isDarkMode);
             InitializeTimers();
             InitializeMLIntegration();
             LoadRecentCases();
@@ -75,10 +78,10 @@ namespace Multi_Layer_Spoofing_Detector
                     _settings.AnalysisTimeoutMs);
                 _isMlIntegrationReady = true;
 
-                AnalysisModuleDetails.Text = "✓ Docker ML Engine ready";
+                AnalysisModuleDetails.Text = preflight.Message;
                 AnalysisModuleDetails.Foreground =
                     (SolidColorBrush)FindResource("SafeBrush");
-                OperationalStatusText.Text = preflight.Message;
+                OperationalStatusText.Text = "● Platform ready — no active analysis";
                 AppLogger.Info("Environment preflight passed.");
             }
             catch (Exception ex)
@@ -89,7 +92,8 @@ namespace Multi_Layer_Spoofing_Detector
                     (SolidColorBrush)FindResource("CriticalBrush");
 
                 AnalyzeBtn.IsEnabled = false;
-                OperationalStatusText.Text = ex.Message;
+                OperationalStatusText.Text = "● Environment check failed";
+                AnalysisModuleDetails.Text = ex.Message;
                 AppLogger.Error($"Environment preflight failed: {ex.Message}");
 
                 DialogService.ShowError(
@@ -280,6 +284,9 @@ namespace Multi_Layer_Spoofing_Detector
 
                 AnalyzeBtn.IsEnabled = true;
 
+                ReportModuleStatus.Text = "⏸  PCAP uploaded. Run the pipeline to enable reports.";
+                ReportModuleStatus.Foreground = (SolidColorBrush)FindResource("WarningBrush");
+
                 DialogService.ShowSuccess(
                     this,
                     "File Upload",
@@ -288,10 +295,6 @@ namespace Multi_Layer_Spoofing_Detector
 
                 AppLogger.Info($"PCAP uploaded: {_currentPcapFilePath}");
 
-                if (_settings.AutoRunAfterUpload)
-                {
-                    AnalyzeBtn_Click(this, new RoutedEventArgs());
-                }
             }
 
             catch (Exception ex)
@@ -408,6 +411,8 @@ namespace Multi_Layer_Spoofing_Detector
                 UpdateNetworkStatus();
                 UpdateAnalysisResultsDisplay();
                 UpdateReportSummary();
+                ReportModuleStatus.Text = $"✓ Analysis run complete. Case: {_currentCaseId} | Findings: {_analysisResults.Count}";
+                ReportModuleStatus.Foreground = (SolidColorBrush)FindResource("SafeBrush");
 
                 AnalyzeBtn.IsEnabled = true;
 
@@ -670,7 +675,7 @@ namespace Multi_Layer_Spoofing_Detector
         private void RunPreflightCheckBtn_Click(object sender, RoutedEventArgs e)
         {
             var preflight = RunPreflightCheck();
-            OperationalStatusText.Text = preflight.Message;
+            AnalysisModuleDetails.Text = preflight.Message;
 
             if (preflight.Ok)
             {
@@ -680,6 +685,7 @@ namespace Multi_Layer_Spoofing_Detector
                     _settings.AnalysisTimeoutMs);
                 _isMlIntegrationReady = true;
                 AnalyzeBtn.IsEnabled = true;
+                OperationalStatusText.Text = "● Platform ready — no active analysis";
                 DialogService.ShowSuccess(this, "Preflight Check", "Environment is ready.");
                 AppLogger.Info("Manual preflight check passed.");
             }
@@ -687,6 +693,7 @@ namespace Multi_Layer_Spoofing_Detector
             {
                 _isMlIntegrationReady = false;
                 AnalyzeBtn.IsEnabled = false;
+                OperationalStatusText.Text = "● Environment check failed";
                 DialogService.ShowWarning(this, "Preflight Check", preflight.Message);
                 AppLogger.Error($"Manual preflight check failed: {preflight.Message}");
             }
@@ -694,9 +701,86 @@ namespace Multi_Layer_Spoofing_Detector
 
         private void AutoRunCheckBox_Changed(object sender, RoutedEventArgs e)
         {
-            _settings.AutoRunAfterUpload = AutoRunCheckBox.IsChecked == true;
+            _settings.AutoRunAfterUpload = false;
+            AutoRunCheckBox.IsChecked = false;
             AppSettingsService.Save(_settings);
-            AppLogger.Info($"AutoRunAfterUpload changed to: {_settings.AutoRunAfterUpload}");
+            AppLogger.Info("Auto-run after upload is disabled; manual pipeline execution required.");
+        }
+
+        private void ThemeToggleButton_Click(object sender, RoutedEventArgs e)
+        {
+            _isDarkMode = !_isDarkMode;
+            ApplyTheme(_isDarkMode);
+        }
+
+        private void ApplyTheme(bool darkMode)
+        {
+            var palette = darkMode
+                ? new Dictionary<string, string>
+                {
+                    ["BgBase"] = "#07111E",
+                    ["BgPanel"] = "#0C1B2E",
+                    ["BgCard"] = "#0F2240",
+                    ["BgCardSoft"] = "#132C50",
+                    ["BorderNormal"] = "#1E3D68",
+                    ["BorderBright"] = "#2A5490",
+                    ["TextPrimary"] = "#D8EAF8",
+                    ["TextSecondary"] = "#6B9EC8",
+                    ["TextMuted"] = "#3A5D80",
+                    ["TitleBarGradientStart"] = "#091628",
+                    ["TitleBarGradientEnd"] = "#0E1E33"
+                }
+                : new Dictionary<string, string>
+                {
+                    ["BgBase"] = "#F3F7FC",
+                    ["BgPanel"] = "#E8F0FA",
+                    ["BgCard"] = "#FFFFFF",
+                    ["BgCardSoft"] = "#F5F9FF",
+                    ["BorderNormal"] = "#C6D9EE",
+                    ["BorderBright"] = "#8CB3DC",
+                    ["TextPrimary"] = "#102A43",
+                    ["TextSecondary"] = "#486581",
+                    ["TextMuted"] = "#829AB1",
+                    ["TitleBarGradientStart"] = "#E6EEF8",
+                    ["TitleBarGradientEnd"] = "#D8E6F4"
+                };
+
+            foreach (var item in palette.Where(p => p.Key != "TitleBarGradientStart" && p.Key != "TitleBarGradientEnd"))
+            {
+                var color = (Color)ColorConverter.ConvertFromString(item.Value);
+                if (Resources[item.Key] is SolidColorBrush existingBrush && !existingBrush.IsFrozen)
+                {
+                    existingBrush.Color = color;
+                }
+                else
+                {
+                    Resources[item.Key] = new SolidColorBrush(color);
+                }
+            }
+
+            var gradientStart = (Color)ColorConverter.ConvertFromString(palette["TitleBarGradientStart"]);
+            var gradientEnd = (Color)ColorConverter.ConvertFromString(palette["TitleBarGradientEnd"]);
+            if (Resources["TitleBarGradient"] is LinearGradientBrush existingGradient &&
+                !existingGradient.IsFrozen &&
+                existingGradient.GradientStops.Count >= 2)
+            {
+                existingGradient.GradientStops[0].Color = gradientStart;
+                existingGradient.GradientStops[1].Color = gradientEnd;
+            }
+            else
+            {
+                Resources["TitleBarGradient"] = new LinearGradientBrush(
+                    new GradientStopCollection
+                    {
+                        new GradientStop(gradientStart, 0),
+                        new GradientStop(gradientEnd, 1)
+                    },
+                    new Point(0, 0),
+                    new Point(1, 0));
+            }
+
+            ThemeToggleButton.Content = darkMode ? "☀ Light" : "🌙 Dark";
+            AppLogger.Info($"Theme switched to {(darkMode ? "dark" : "light")} mode.");
         }
 
         private void ExportEvidenceBundleBtn_Click(object sender, RoutedEventArgs e)
