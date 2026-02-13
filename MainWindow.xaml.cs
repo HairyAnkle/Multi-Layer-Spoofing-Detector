@@ -58,6 +58,10 @@ namespace Multi_Layer_Spoofing_Detector
             _settings = AppSettingsService.Load();
             _settings.AutoRunAfterUpload = false;
             AutoRunCheckBox.IsChecked = false;
+            LiveAlertsLegendText.Text =
+                $"Green: < {_settings.MediumConfidenceThreshold}% confidence (informational). " +
+                $"Amber: {_settings.MediumConfidenceThreshold}%–{_settings.HighConfidenceThreshold - 1}% (suspicious). " +
+                $"Red: ≥ {_settings.HighConfidenceThreshold}% (critical).";
             InitializeTimers();
             InitializeMLIntegration();
             LoadRecentCases();
