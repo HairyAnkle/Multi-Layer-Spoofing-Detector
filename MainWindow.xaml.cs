@@ -801,7 +801,12 @@ namespace Multi_Layer_Spoofing_Detector
             {
                 var recentCases = _repo.GetRecentCases(8);
                 RecentCasesList.ItemsSource = recentCases
-                    .Select(c => $"{c.AnalysisTime:yyyy-MM-dd HH:mm:ss} | {c.CaseId} | {c.PcapFile} | {c.NetworkStatus}")
+                    .Select(c =>
+                    {
+                        var results = _repo.GetAnalysisResults(c.CaseId);
+                        var risk = RiskCalculator.ComputeUiRisk(results);
+                        return $"{c.AnalysisTime:yyyy-MM-dd HH:mm:ss} | {c.CaseId} | {c.PcapFile} | CVSS {risk.Score:0.0}";
+                    })
                     .ToList();
             }
             catch (Exception ex)
