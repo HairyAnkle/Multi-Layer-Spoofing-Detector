@@ -1922,7 +1922,7 @@
                                 BorderBrush="{StaticResource InfoBrush}">
                             <StackPanel>
                                 <TextBlock Text="Processing Analysis…"
-                                           Foreground="{StaticResource TextPrimary}"
+                                           Foreground="{StaticResource TextBrush}"
                                            FontFamily="Segoe UI" FontSize="18" FontWeight="SemiBold"
                                            HorizontalAlignment="Center" Margin="0,0,0,16"/>
                                 <ProgressBar IsIndeterminate="True"
@@ -1930,7 +1930,7 @@
                                              Margin="0,0,0,12"/>
                                 <TextBlock x:Name="LoadingProgressText"
                                            Text="Initializing pipeline…"
-                                           Foreground="{StaticResource TextSecondary}"
+                                           Foreground="{StaticResource TextBrush}"
                                            FontFamily="Consolas" FontSize="12"
                                            TextAlignment="Center"/>
                             </StackPanel>
