@@ -248,9 +248,6 @@
 
     </Window.Resources>
 
-    <!-- ═══════════════════════════════════════════════
-         ROOT CONTAINER
-         ═══════════════════════════════════════════════ -->
     <Border Background="{StaticResource AppGradient}"
             CornerRadius="16"
             BorderThickness="1"
@@ -266,9 +263,6 @@
                 <!-- Main content       -->
             </Grid.RowDefinitions>
 
-            <!-- ═══════════════════════════════════════
-                 ROW 0 — TITLE BAR
-                 ═══════════════════════════════════════ -->
             <Border Grid.Row="0"
                     Background="{StaticResource TitleBarGradient}"
                     CornerRadius="16,16,0,0"
@@ -342,11 +336,6 @@
                 </Grid>
             </Border>
 
-            <!-- ═══════════════════════════════════════
-                 ROW 1 — COLOR LEGEND / DESIGN KEY
-                 Addresses panel feedback: "color scheme not dictated"
-                 Every color is named and explained here.
-                 ═══════════════════════════════════════ -->
             <Border x:Name="LegendBarBorder" Grid.Row="1"
                     Background="#EAF2FB"
                     BorderBrush="#B9CDE3"
@@ -457,9 +446,6 @@
                 </WrapPanel>
             </Border>
 
-            <!-- ═══════════════════════════════════════
-                 ROW 2 — MAIN CONTENT AREA
-                 ═══════════════════════════════════════ -->
             <Grid x:Name="MainContentGrid" Grid.Row="2">
                 <ScrollViewer x:Name="MainContentScrollViewer" VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled"
@@ -474,9 +460,6 @@
                             <!-- Outputs + reports -->
                         </Grid.RowDefinitions>
 
-                        <!-- ─────────────────────────────────────────
-                             ROW A — KPI STRIP (4 metric cards)
-                             ───────────────────────────────────────── -->
                         <Grid Grid.Row="2" Margin="0,12,0,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -671,9 +654,6 @@
                             </Border>
                         </Grid>
 
-                        <!-- ─────────────────────────────────────────
-                             ROW B — THREE-COLUMN WORKFLOW + ANALYTICS
-                             ───────────────────────────────────────── -->
                         <Grid Grid.Row="0" Margin="0,0,0,12">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="0.85*" MinWidth="280"/>
@@ -1243,7 +1223,7 @@
                                                                    Foreground="{StaticResource TextMuted}"
                                                                    FontFamily="Segoe UI" FontSize="10"/>
                                                     </Grid>
-                                                    <!-- LiveCharts CartesianChart — bind in code-behind -->
+                                                    <!-- LiveCharts CartesianChart -->
                                                     <lvc:CartesianChart x:Name="ThreatTimelineChart"
                                                                         Height="200"
                                                                         DisableAnimations="True"
@@ -1923,9 +1903,6 @@
                     </Grid>
                 </ScrollViewer>
 
-                <!-- ═══════════════════════════════════════
-                     LOADING OVERLAY
-                     ═══════════════════════════════════════ -->
                 <Border x:Name="LoadingOverlay"
                         Background="#C007111E"
                         Visibility="Collapsed">
@@ -1946,6 +1923,7 @@
                                              Height="8"
                                              Margin="0,0,0,12"/>
                                 <TextBlock x:Name="LoadingProgressText"
+                                           Foreground="{StaticResource TextBrush}"
                                            Text="Initializing pipeline…"
                                            Foreground="{StaticResource TextBrush}"
                                            FontFamily="Consolas" FontSize="12"
@@ -1955,14 +1933,6 @@
                     </Grid>
                 </Border>
 
-                <!-- ═══════════════════════════════════════════
-                     HIDDEN COMPATIBILITY STUBS
-                     Visibility="Collapsed" — zero visual impact.
-                     Provide x:Name bindings that existing
-                     code-behind (MainWindow.xaml.cs) references,
-                     preventing CS0103 compile errors.
-                     ═══════════════════════════════════════════ -->
-                <!-- Compatibility stubs: Width/Height=0, zero visual impact -->
                 <Grid Visibility="Collapsed" Width="0" Height="0">
                     <TextBlock x:Name="NetworkStatusIcon" Text="" FontSize="1"/>
                     <Ellipse x:Name="StatusIndicator" Width="1" Height="1"/>
