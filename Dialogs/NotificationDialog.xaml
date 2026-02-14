@@ -9,7 +9,27 @@
         WindowStyle="None"
         Background="#1E1E2E"
         AllowsTransparency="True">
-    <Border Background="#1E1E2E" CornerRadius="12" BorderBrush="#2E2E40" BorderThickness="1" Padding="20">
+
+    <Window.Resources>
+        <SolidColorBrush x:Key="TextPrimary"    Color="#102A43"/>
+        <SolidColorBrush x:Key="TextSecondary"  Color="#2E4964"/>
+        <Style x:Key="TitleStyle" TargetType="TextBlock">
+            <Setter Property="Foreground"   Value="{StaticResource TextPrimary}"/>
+            <Setter Property="FontFamily"   Value="Segoe UI"/>
+            <Setter Property="FontSize"     Value="15"/>
+            <Setter Property="FontWeight"   Value="SemiBold"/>
+        </Style>
+
+        <Style x:Key="SubTitleStyle" TargetType="TextBlock">
+            <Setter Property="Foreground"   Value="{StaticResource TextSecondary}"/>
+            <Setter Property="FontFamily"   Value="Segoe UI"/>
+            <Setter Property="FontSize"     Value="12"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Margin"       Value="0,4,0,12"/>
+        </Style>
+    </Window.Resources>
+
+    <Border Background="#F2F7FE" CornerRadius="12" BorderBrush="#2E2E40" BorderThickness="1" Padding="20">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -26,7 +46,7 @@
                 <TextBlock x:Name="TitleText"
                            FontSize="18"
                            FontWeight="SemiBold"
-                           Foreground="White"
+                           Style="{StaticResource TitleStyle}"
                            VerticalAlignment="Center"/>
             </DockPanel>
 
@@ -35,7 +55,7 @@
             <TextBlock x:Name="MessageText"
                        Grid.Row="2"
                        TextWrapping="Wrap"
-                       Foreground="#D6D6E7"
+                       Style="{StaticResource SubTitleStyle}"
                        FontSize="14"/>
 
             <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
@@ -51,7 +71,7 @@
                 <Button x:Name="PrimaryButton"
                         Width="90"
                         Height="32"
-                        Background="#00C9A7"
+                        Background="#1A2C4A"
                         Foreground="White"
                         BorderThickness="0"
                         Click="PrimaryButton_Click"/>
